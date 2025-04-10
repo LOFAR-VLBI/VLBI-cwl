@@ -7,15 +7,15 @@ doc: |
     This is used to ensure that flagging jobs don't exceed the
     node's resources.
 
-baseCommand:
-    - python3
-    - query_memory.py
+baseCommand: query_memory.py
 
 stdout: memory.txt
 
 inputs:
     - id: fraction
       type: int 
+      inputBinding:
+        position: 1
       doc: |
         The required fraction of the node's
         available memory for a flagging job.
@@ -37,20 +37,4 @@ hints:
 
 requirements:
     - class: InlineJavascriptRequirement
-    - class: InitialWorkDirRequirement
-      listing:
-        - entryname: query_memory.py
-          entry: |
-            import json
-            import psutil
 
-            # psuitil outputs the memory in bytes.
-            # This is converted into mebibytes (1 MiB = 2^20 B)
-            # to match CWL's ResourceRequirement input.
-            required_memory = int(psutil.virtual_memory().available / 2**20
-                                    * $(inputs.fraction) / 100)
-            print("The available memory is ", required_memory)
-            result = {"memory" : required_memory}
-
-            with open('./memory.json', 'w') as fp:
-                json.dump(result, fp)
