@@ -44,7 +44,7 @@ def test_skynet():
 def test_compare_stations():
     import glob
 
-    reference = {"filter": "*&"}
+    reference = "*&"
 
     filter = "*&" 
     solset = f"{data_dir}/results_target/cal_solutions.h5"
