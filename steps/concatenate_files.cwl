@@ -7,23 +7,9 @@ doc: |
     The output file can be given a file name and, optionally,
     a suffix.
 
-baseCommand:
-    - bash
-    - bulk_rename.sh
+baseCommand: cat
 
-requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: bulk_rename.sh
-        entry: |
-          #!/bin/bash
-          set -e
-          FILE_LIST=("\${@}")
-          FILE_PREFIX=$(inputs.file_prefix)
-          FILE_SUFFIX=$(inputs.file_suffix === null ? '' : inputs.file_suffix)
-          cat "\${FILE_LIST[@]}" > $FILE_PREFIX.$FILE_SUFFIX
-        writable: false
-  - class: InlineJavascriptRequirement
+stdout: $(inputs.file_prefix).$(inputs.file_suffix)
 
 inputs:
     - id: file_list
@@ -43,7 +29,5 @@ inputs:
 
 outputs:
     - id: output
-      type: File
-      outputBinding:
-        glob: "$(inputs.file_prefix).$(inputs.file_suffix)"
+      type: stdout
       doc: The concatenated file.
