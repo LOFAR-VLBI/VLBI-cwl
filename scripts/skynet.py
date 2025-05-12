@@ -7,8 +7,6 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import bdsf
 
-#def new_write_skymodel (
-
 def write_skymodel (model, outname = None):
 
     print(f'writing the skymodel for: {model}')
