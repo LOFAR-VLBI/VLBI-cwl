@@ -129,6 +129,11 @@ inputs:
       default: false
       doc: When true, the best delay calibrator will be searched for based on phasediff scores.
 
+    - id: select_best_n_delay_calibrators
+      type: int?
+      default: 1
+      doc: Select this number of top-scoring delay calibrator candidates to attempt to calibrate.
+
     - id: starting_skymodel
       type:
         - File?
@@ -263,7 +268,7 @@ steps:
         - id: image_cat
           source: delay_calibrator
         - id: select_best_n
-          valueFrom: $(1)
+          source: select_best_n_delay_calibrators
         - id: configfile
           source: configfile
         - id: skymodel
