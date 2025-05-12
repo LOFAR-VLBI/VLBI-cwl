@@ -185,18 +185,30 @@ steps:
       when: $(inputs.dd_selection)
       run: ./subworkflows/ddcal_pre_selection.cwl
 
+    - id: sort_skymodels
+      in:
+        - id: input_files
+          source: skymodel
+      out:
+        - id: sorted_files
+      run: ../steps/sort_by_name.cwl
+
+    - id: sort_ms
+      in:
+        - id: input_directories
+          source: 
+            - ddcal_pre_selection/best_ms
+            - dp3_parset/msout
+          pickValue: first_non_null
+      out:
+        - id: sorted_directories
+      run: ../steps/sort_by_name.cwl
+
     - id: target_selfcal
       label: Target Selfcal
       in:
         - id: msin
-          source:
-            - ddcal_pre_selection/best_ms
-            - dp3_parset/msout
-          pickValue: first_non_null
-          valueFrom: >
-            ${ return self.slice().sort(function(a, b) {
-                return a.basename.localeCompare(b.basename);
-            }); }
+          source: sort_ms/sorted_directories
         - id: configfile
           source: configfile
         - id: h5merger
@@ -206,11 +218,7 @@ steps:
         - id: do_selfcal
           source: do_selfcal
         - id: skymodel
-          source: skymodel
-          valueFrom: >
-            ${ return self.slice().sort(function(a, b) {
-                return a.basename.localeCompare(b.basename);
-            }); }
+          source: sort_skymodels/sorted_files
       out:
         - id: images
         - id: h5parm
