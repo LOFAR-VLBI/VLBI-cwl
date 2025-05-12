@@ -268,7 +268,7 @@ steps:
           source: configfile
         - id: skymodel
           source: [starting_skymodel]
-          linkMerge: merge_nested
+          linkMerge: merge_flattened
       out:
         - id: msout_concat
         - id: images
