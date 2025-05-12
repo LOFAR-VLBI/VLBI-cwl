@@ -286,8 +286,11 @@ steps:
 
     - id: flatten_delay_images
       in:
+        - id: find_best_delay_cal
+          source: find_best_delay_cal
         - id: nestedarray
           source: select_best_delay_cal/images
+          linkMerge: merge_flattened
       out:
         - id: flattenedarray
       run: ../steps/flatten.cwl
