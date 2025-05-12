@@ -137,6 +137,7 @@ inputs:
     - id: starting_skymodel
       type:
         - File?
+        - File[]?
       doc: Optional starting model in BBS-compatible text format used to kickstart the delay calibration.
 
 steps:
