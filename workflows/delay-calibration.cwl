@@ -287,7 +287,7 @@ steps:
     - id: flatten_delay_images
       in:
         - id: find_best_delay_cal
-          source: find_best_delay_cal
+          source: do_auto_delay_selection
         - id: nestedarray
           source: select_best_delay_cal/images
           linkMerge: merge_flattened
