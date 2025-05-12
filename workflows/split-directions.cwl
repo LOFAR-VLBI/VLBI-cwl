@@ -194,7 +194,7 @@ steps:
             - dp3_parset/msout
           pickValue: first_non_null
           valueFrom: >
-            ${ return inputs.dirs.slice().sort(function(a, b) {
+            ${ return inputs.msin.slice().sort(function(a, b) {
                 return a.basename.localeCompare(b.basename);
             }); }
         - id: configfile
@@ -208,7 +208,7 @@ steps:
         - id: skymodel
           source: skymodel
           valueFrom: >
-            ${ return inputs.dirs.slice().sort(function(a, b) {
+            ${ return inputs.skymodel.slice().sort(function(a, b) {
                 return a.basename.localeCompare(b.basename);
             }); }
       out:
