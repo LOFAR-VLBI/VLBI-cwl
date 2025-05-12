@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
 import numpy as np
 import re
+import os
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+import bdsf
 
+#def new_write_skymodel (
 
-def write_skymodel (ra, dec, model, outname = None):
+def write_skymodel (model, outname = None):
 
     print(f'writing the skymodel for: {model}')
-
     if outname:
         with open(outname, 'w') as skymodel:
-            skymodel.write ('# (Name, Type, Ra, Dec, I, MajorAxis, MinorAxis, Orientation) = format\n')
+            skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]') = format\n" )
+            skymodel.write(', , P0, 00:00:00, +00.00.00\n')
             for i in range(len(model)):
+                ra = model[i][3]
+                dec = model[i][4]
                 # the angles RA and DEC should be sexigesimal coordinates, which for
                 # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
                 # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
@@ -23,21 +28,23 @@ def write_skymodel (ra, dec, model, outname = None):
                     sra = ra
                     sdec = dec
                 else:
-                    cosd = 3600.*np.cos(np.deg2rad(dec))
-                    s = SkyCoord(ra-model[i,0]/cosd,dec+model[i,1]/3600,unit='degree')
+                    s = SkyCoord(ra,dec,unit='degree')
                     s = s.to_string(style='hmsdms')
                     sra = s.split()[0]
                     sdec = s.split()[1]
                 sra = sra.replace('h',':').replace('m',':').replace('s','')
                 sdec = sdec.replace('d','.').replace('m','.').replace('s','')
-                print('ME%d, GAUSSIAN, %s, %s, %f, %f, %f, %f'%(i,sra,sdec,model[i,2],\
-                      model[i,3],model[i,3]*model[i,4],np.rad2deg(model[i,5])))
-                skymodel.write('ME%d, GAUSSIAN, %s, %s, %f, %f, %f, %f\n'%(i,sra,sdec,model[i,2],\
-                               model[i,3],model[i,3]*model[i,4],np.rad2deg(model[i,5])))
+                model[i][3] = sra
+                model[i][4] = sdec
+                ss_to_write = ''
+                for j in np.arange(0,len(model[i])):
+                    ss_to_write = ss_to_write + str(model[i][j]) + ','
+                ss_to_write = ss_to_write.rstrip(',')
+                skymodel.write( '{:s}\n'.format(ss_to_write) )
 
 ################## skynet ##############################
 
-def main (MS, delayCalFile):
+def main (MS, delayCalFile, modelImage=''):
 
     ## make sure the parameters are the correct format
     # MS is assumed to be of the form:
@@ -98,9 +105,42 @@ def main (MS, delayCalFile):
     dec = t[de_col].data[src_idx]
     smodel = t['Total_flux'].data[src_idx]*1.0e-3
 
-    print('generating point model')
-    point_model = np.array( [ [0.0,0.0,smodel,0.1,0.0,0.0] ] )
-    write_skymodel (ra,dec,point_model,'skymodel.txt')
+    if modelImage == '':
+        print('generating point model')
+        sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]'] ] )
+        write_skymodel (sky_model,'skymodel.txt')
+    else:
+        print('using input image to generate model')
+        img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
+        img.write_catalog(format='fits', outfile='tmp.fits')
+        t = Table.read('tmp.fits',format='fits')
+        maxval = np.max(t['Total_flux'])
+        img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
+        img.write_catalog(format='fits',outfile='tmp.fits',clobber=True)
+        t = Table.read('tmp.fits', format='fits')
+        total_flux = np.sum(t['Total_flux'])
+        fluxes = t['Total_flux']*smodel/total_flux
+        tmp = []
+        for i in np.arange(0,len(t)):
+            component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',t['RA'][i],t['DEC'][i],fluxes[i],0.0, 0.0, 0.0, t['DC_Maj'][i]*3600., t['DC_Min'][i]*3600., t['DC_PA'][i], '144e+06', "[-0.7]" ]
+            tmp.append(component)
+        sky_model = np.array(tmp)
+        write_skymodel( sky_model, 'skymodel.txt')
+        os.system( 'rm tmp.fits' )
+
+        ## scale to LoTSS
+        #Name, Type, Ra, Dec, I, MajorAxis, MinorAxis, Orientation
+        ## add spectral index and Q, U, V
+
+        ## want to write
+        #format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='3.00000e+09', SpectralIndex='[]'
+        #use ReferenceFrequency --> 144e6 and the type of specindex
+
+
+        #img.write_catalog(format='bbs', bbs_patches='source', outfile='test_skymodel.txt', clobber=True)
+        ## update the flux density based on LoTSS
+
+    
 
 if __name__ == "__main__":
     import argparse
@@ -108,7 +148,8 @@ if __name__ == "__main__":
 
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
     parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
+    parser.add_argument('--model-image', type=str, help='model image to start with', default='')
 
     args = parser.parse_args()
 
-    main( args.MS, delayCalFile=args.delay_cal_file )
+    main( args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image )
