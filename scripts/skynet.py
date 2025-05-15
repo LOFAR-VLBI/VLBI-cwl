@@ -7,12 +7,14 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import bdsf
 
+#def new_write_skymodel (
+
 def write_skymodel (model, outname = None):
 
     print(f'writing the skymodel for: {model}')
     if outname:
         with open(outname, 'w') as skymodel:
-            skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]') = format\n" )
+            skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format\n" )
             skymodel.write(', , P0, 00:00:00, +00.00.00\n')
             for i in range(len(model)):
                 ra = model[i][3]
@@ -105,39 +107,46 @@ def main (MS, delayCalFile, modelImage=''):
 
     if modelImage == '':
         print('generating point model')
-        sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]'] ] )
+        sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+        if t['alpha_1'].data[src_idx] != "--":
+            a_1 = t['alpha_1'].data[src_idx]
+            a_2 = t['alpha_2'].data[src_idx]
+            sky_model[13] = f'[{a_1:.3f},{a_2:.3f}]'
         write_skymodel (sky_model,'skymodel.txt')
     else:
         print('using input image to generate model')
+        if t['alpha_1'].data[src_idx] != "--":
+            a_1 = t['alpha_1'].data[src_idx]
+            a_2 = t['alpha_2'].data[src_idx]
+        else:
+            a_1, a_2 = None, None
         img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
-        img.write_catalog(format='fits', outfile='tmp.fits')
-        t = Table.read('tmp.fits',format='fits')
-        maxval = np.max(t['Total_flux'])
+        sources = img.sources
+        maxval = 0.
+        for src in sources:
+            maxval = np.max( (maxval, src.total_flux) )
         img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
-        img.write_catalog(format='fits',outfile='tmp.fits',clobber=True)
-        t = Table.read('tmp.fits', format='fits')
-        total_flux = np.sum(t['Total_flux'])
-        fluxes = t['Total_flux']*smodel/total_flux
+        sources = img.sources
+        tot_flux = 0.
+        for src in sources:
+            tot_flux = tot_flux + src.total_flux
+        flux_scaling = smodel/tot_flux
         tmp = []
-        for i in np.arange(0,len(t)):
-            component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',t['RA'][i],t['DEC'][i],fluxes[i],0.0, 0.0, 0.0, t['DC_Maj'][i]*3600., t['DC_Min'][i]*3600., t['DC_PA'][i], '144e+06', "[-0.7]" ]
+        i = 0
+        for src in sources:
+            ra = src.posn_sky_centroid[0]
+            dec = src.posn_sky_centroid[1]
+            tflux = src.total_flux * flux_scaling
+            dcmaj = src.deconv_size_sky[0]*3600.
+            dcmin = src.deconv_size_sky[1]*3600.
+            dcpa = src.deconv_size_sky[2]
+            component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',ra,dec,tflux,0.0, 0.0, 0.0, dcmaj, dcmin, dcpa, '144e+06', "[-0.7]", 'true' ]
+            if a_1 is not None:
+                component[13] = f"[{a_1:.3f}, {a_2:.3f}]"
             tmp.append(component)
+            i = i + 1
         sky_model = np.array(tmp)
         write_skymodel( sky_model, 'skymodel.txt')
-        os.system( 'rm tmp.fits' )
-
-        ## scale to LoTSS
-        #Name, Type, Ra, Dec, I, MajorAxis, MinorAxis, Orientation
-        ## add spectral index and Q, U, V
-
-        ## want to write
-        #format = Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='3.00000e+09', SpectralIndex='[]'
-        #use ReferenceFrequency --> 144e6 and the type of specindex
-
-
-        #img.write_catalog(format='bbs', bbs_patches='source', outfile='test_skymodel.txt', clobber=True)
-        ## update the flux density based on LoTSS
-
     
 
 if __name__ == "__main__":
