@@ -7,8 +7,6 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import bdsf
 
-#def new_write_skymodel (
-
 def write_skymodel (model, outname = None):
 
     print(f'writing the skymodel for: {model}')
@@ -105,6 +103,15 @@ def main (MS, delayCalFile, modelImage=''):
     dec = t[de_col].data[src_idx]
     smodel = t['Total_flux'].data[src_idx]*1.0e-3
 
+    ## gaia information if available - else use panstarrs if it is available
+    if t['gaia_id'].data[src_idx] != "--":
+        opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
+    elif t['ps_id'].data[src_idx] !="--":
+        opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
+    else:
+        opt_coords = None
+
+
     if modelImage == '':
         print('generating point model')
         sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
@@ -127,15 +134,31 @@ def main (MS, delayCalFile, modelImage=''):
             maxval = np.max( (maxval, src.total_flux) )
         img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
         sources = img.sources
+        ## get flux scaling
         tot_flux = 0.
         for src in sources:
             tot_flux = tot_flux + src.total_flux
         flux_scaling = smodel/tot_flux
+        ## get positional corrections if available
+        if opt_coords is not None:
+            seps = []
+            for src in sources:
+                src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
+                sep = src_coords.separation(opt_coords).value*3600
+                seps.append(sep)
+            minsep_idx = np.where( seps == np.min(seps) )[0][0]
+            minsep_src = sources[minsep_idx]
+            delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
+            delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
+        else:
+            delta_ra = 0.
+            delta_dec = 0.
+
         tmp = []
         i = 0
         for src in sources:
-            ra = src.posn_sky_centroid[0]
-            dec = src.posn_sky_centroid[1]
+            ra = src.posn_sky_centroid[0] + delta_ra
+            dec = src.posn_sky_centroid[1] + delta_dec
             tflux = src.total_flux * flux_scaling
             dcmaj = src.deconv_size_sky[0]*3600.
             dcmin = src.deconv_size_sky[1]*3600.
