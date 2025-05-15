@@ -124,6 +124,10 @@ inputs:
       default: false
       doc: When set to true, the LoTSS model will be subtracted from the DDF corrected data.
 
+    - id: model_image
+      type: File?
+      doc: Image to use as an initial delay calibration model.
+
 steps:
     - id: setup
       label: setup
@@ -219,6 +223,8 @@ steps:
           source: linc
         - id: max_dp3_threads
           source: max_dp3_threads
+        - id: model_image
+          source: model_image
       out:
         - id: msout
         - id: solutions

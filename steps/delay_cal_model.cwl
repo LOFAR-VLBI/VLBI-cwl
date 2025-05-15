@@ -22,6 +22,10 @@ inputs:
         prefix: --delay-cal-file
         separate: true
 
+    - id: model_image
+      type: File?
+      doc: Image to use as an initial delay calibrator model.
+
 outputs:
     - id: skymodel
       type: File
