@@ -42,7 +42,7 @@ def write_skymodel (model, outname = None):
 
 ################## skynet ##############################
 
-def main (MS, delayCalFile, modelImage=''):
+def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0):
 
     ## make sure the parameters are the correct format
     # MS is assumed to be of the form:
@@ -148,8 +148,12 @@ def main (MS, delayCalFile, modelImage=''):
                 seps.append(sep)
             minsep_idx = np.where( seps == np.min(seps) )[0][0]
             minsep_src = sources[minsep_idx]
-            delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
-            delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
+            if minsep_src < astroSearchRadius:
+                delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
+                delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
+            else:
+                delta_ra = 0.
+                delta_dec = 0.
         else:
             delta_ra = 0.
             delta_dec = 0.
@@ -179,6 +183,7 @@ if __name__ == "__main__":
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
     parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
     parser.add_argument('--model-image', type=str, help='model image to start with', default='')
+    parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
 
     args = parser.parse_args()
 
