@@ -80,6 +80,18 @@ inputs:
       type: File[]?
       doc: An optional skymodel to be passed as a starting model.
 
+    - id: frequency_resolution
+      type: string?
+      default: '390.56kHz'
+      doc: |
+        Frequency resolution for the split off datasets.
+
+    - id: time_resolution
+      type: string?
+      default: '32.'
+      doc: |
+        Time resolution in seconds for the split off datasets.
+
 steps:
     - id: select_bright_sources
       label: Select bright sources
@@ -109,6 +121,10 @@ steps:
           pickValue: first_non_null
         - id: delay_solutions
           source: delay_solset
+        - id: time_resolution
+          source: time_resolution
+        - id: frequency_resolution
+          source: frequency_resolution
       out:
         - id: parset
       run: ./subworkflows/split_parset.cwl
