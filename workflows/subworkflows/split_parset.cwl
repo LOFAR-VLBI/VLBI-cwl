@@ -30,6 +30,18 @@ inputs:
         Delay calibrator solutions. This is used
         to determine the beam direction.
 
+    - id: frequency_resolution
+      type: string?
+      default: '390.56kHz'
+      doc: |
+        Frequency resolution for the split off datasets.
+
+    - id: time_resolution
+      type: string?
+      default: '32.'
+      doc: |
+        Time resolution in seconds for the split off datasets.
+
 outputs:
     - id: parset
       type: File
@@ -109,6 +121,10 @@ steps:
           source: get_coordinates/coordinates
         - id: beamdir_delay_cal
           source: get_delay_cal_beam_dir/coordinates
+        - id: time_resolution
+          source: time_resolution
+        - id: frequency_resolution
+          source: frequency_resolution
       out:
         - id: parset
       run: ../../steps/generate_parset_split.cwl
@@ -123,6 +139,10 @@ steps:
           source: generate_filenames/msout_names
         - id: phase_centers
           source: get_coordinates/coordinates
+        - id: time_resolution
+          source: time_resolution
+        - id: frequency_resolution
+          source: frequency_resolution
       out:
         - id: parset
       run: ../../steps/generate_parset_split_nosol.cwl
