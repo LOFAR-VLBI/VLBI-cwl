@@ -48,6 +48,10 @@ inputs:
       The installation directory for the
       LOFAR INitial calibration pipeline.
 
+  - id: model_image
+    type: File?
+    doc: Image to use as an initial delay calibrator model.
+
 steps:
   - id: collect_linc_libraries
     label: Collect neccesary LINC libraries
@@ -179,6 +183,8 @@ steps:
         valueFrom: $(self[0])
       - id: delay_calibrator
         source: delay_calibrator
+      - id: model_image
+        source: model_image
     out:
       - id: skymodel
       - id: logfile
