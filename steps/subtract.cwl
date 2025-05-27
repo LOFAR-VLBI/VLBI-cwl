@@ -5,7 +5,7 @@ label: Subtract a LoTSS model from the data.
 doc: Subtract a LoTSS model from the data using the images and DD solutions derived by the ddf-pipeline. This requires DDFacet.
 
 baseCommand:
-  - sub-sources-outside-region.py
+  - sub_sources_outside_region
 
 arguments:
   - --onlyuseweightspectrum
