@@ -1,5 +1,5 @@
 #from lofarpipe.support.data_map import DataMap, DataProduct
-import pyrap.tables as pt
+import casacore.tables as pt
 from losoto.h5parm import h5parm
 import logging
 

@@ -7,7 +7,6 @@ dependencies = [
     "losoto",
     "numpy",
     "pandas",
-    "pyrap",
 ]
 
 [project.optional-dependencies]
