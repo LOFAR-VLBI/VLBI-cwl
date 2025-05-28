@@ -2,6 +2,7 @@
 import numpy as np
 import re
 import os
+import glob
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
@@ -40,15 +41,61 @@ def write_skymodel (model, outname = None):
                 ss_to_write = ss_to_write.rstrip(',')
                 skymodel.write( '{:s}\n'.format(ss_to_write) )
 
+def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
+    sources = img.sources
+    maxval = 0.
+    for src in sources:
+        maxval = np.max( (maxval, src.total_flux) )
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
+    sources = img.sources
+    ## get flux scaling
+    tot_flux = 0.
+    for src in sources:
+        tot_flux = tot_flux + src.total_flux
+    flux_scaling = smodel/tot_flux
+    ## get positional corrections if available
+    if opt_coords is not None:
+        seps = []
+        for src in sources:
+            src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
+            sep = src_coords.separation(opt_coords).value*3600
+            seps.append(sep)
+        minsep_idx = np.where( seps == np.min(seps) )[0][0]
+        minsep_src = sources[minsep_idx]
+        if seps[minsep_idx] < astroSearchRadius:
+            delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
+            delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
+        else:
+            delta_ra = 0.
+            delta_dec = 0.
+    else:
+        delta_ra = 0.
+        delta_dec = 0.
+    tmp = []
+    i = 0
+    for src in sources:
+        ra = src.posn_sky_centroid[0] + delta_ra
+        dec = src.posn_sky_centroid[1] + delta_dec
+        tflux = src.total_flux * flux_scaling
+        dcmaj = src.deconv_size_sky[0]*3600.
+        dcmin = src.deconv_size_sky[1]*3600.
+        dcpa = src.deconv_size_sky[2]
+        component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',ra,dec,tflux,0.0, 0.0, 0.0, dcmaj, dcmin, dcpa, '144e+06', "[-0.7]", 'true' ]
+        tmp.append(component)
+        i = i + 1
+    sky_model = np.array(tmp)
+    return(sky_model)
+
 ################## skynet ##############################
 
-def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0):
+def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False):
 
     ## make sure the parameters are the correct format
     # MS is assumed to be of the form:
     # /path/to/MS/{observation_id}_*
-    # We are only interested in {observation_id} here,
-    # and discard the rest.
+    # where observation_id is either the LBCS observation id
+    # or the ILTJ name of the source
 
     # {observation_id} should start with either 'S', 'L', 'I'
     # followed by a number of digits
@@ -58,9 +105,8 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0):
     tmp = MS.split('/')[-1]
     MS_src = tmp.split('_')[0]
 
-    ## get flux from best_delay_calibrators.csv
+    ## open the delay calibrator file to get some information
     t = Table.read( delayCalFile, format='csv' )
-    ## find the RA column
 
     mycols = t.colnames
     # Check if the skymodel uses a LBCS-format catalogue,
@@ -111,69 +157,44 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0):
     else:
         opt_coords = None
 
-
-    if modelImage == '':
-        print('generating point model')
-        sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
-        if t['alpha_1'].data[src_idx] != "--":
-            a_1 = t['alpha_1'].data[src_idx]
-            a_2 = t['alpha_2'].data[src_idx]
-            sky_model[13] = f'[{a_1:.3f},{a_2:.3f}]'
-        write_skymodel (sky_model,'skymodel.txt')
+    ## spectral index information
+    if t['alpha_1'].data[src_idx] != "--":
+        a_1 = t['alpha_1'].data[src_idx]
+        a_2 = t['alpha_2'].data[src_idx]
     else:
-        print('using input image to generate model')
-        if t['alpha_1'].data[src_idx] != "--":
-            a_1 = t['alpha_1'].data[src_idx]
-            a_2 = t['alpha_2'].data[src_idx]
-        else:
-            a_1, a_2 = None, None
-        img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
-        sources = img.sources
-        maxval = 0.
-        for src in sources:
-            maxval = np.max( (maxval, src.total_flux) )
-        img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
-        sources = img.sources
-        ## get flux scaling
-        tot_flux = 0.
-        for src in sources:
-            tot_flux = tot_flux + src.total_flux
-        flux_scaling = smodel/tot_flux
-        ## get positional corrections if available
-        if opt_coords is not None:
-            seps = []
-            for src in sources:
-                src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
-                sep = src_coords.separation(opt_coords).value*3600
-                seps.append(sep)
-            minsep_idx = np.where( seps == np.min(seps) )[0][0]
-            minsep_src = sources[minsep_idx]
-            if minsep_src < astroSearchRadius:
-                delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
-                delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
-            else:
-                delta_ra = 0.
-                delta_dec = 0.
-        else:
-            delta_ra = 0.
-            delta_dec = 0.
+        a_1, a_2 = None, None
 
-        tmp = []
-        i = 0
-        for src in sources:
-            ra = src.posn_sky_centroid[0] + delta_ra
-            dec = src.posn_sky_centroid[1] + delta_dec
-            tflux = src.total_flux * flux_scaling
-            dcmaj = src.deconv_size_sky[0]*3600.
-            dcmin = src.deconv_size_sky[1]*3600.
-            dcpa = src.deconv_size_sky[2]
-            component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',ra,dec,tflux,0.0, 0.0, 0.0, dcmaj, dcmin, dcpa, '144e+06', "[-0.7]", 'true' ]
-            if a_1 is not None:
-                component[13] = f"[{a_1:.3f}, {a_2:.3f}]"
-            tmp.append(component)
-            i = i + 1
-        sky_model = np.array(tmp)
-        write_skymodel( sky_model, 'skymodel.txt')
+
+    if len(modelImage) > 0:
+        ## a model image is specified, use it
+        print('Using user-specified model {:s}'.format(modelImage))
+        sky_model = model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=astroSearchRadius )
+    else:
+        if not skip_vlass:
+            ## search for a vlass image
+            lbcs_id = t[src_idx]['Observation']
+            vlass_file = glob.glob( os.path.join( os.path.dirname(delayCalFile), '{:s}_vlass.fits'.format(lbcs_id) ) )
+            if len(vlass_file) > 0:
+                sky_model = model_from_image( vlass_file[0], smodel, opt_coords, astroSearchRadius=astroSearchRadius )
+            else:
+                print('VLASS image not found, generating a point source model')
+                if opt_coords is not None:
+                    sky_model = np.array( [ ['ME0','GAUSSIAN','P0',opt_coords.ra.value,opt_coords.dec.value,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+                else:
+                    sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+        else:
+            print('generating a point source model')
+            if opt_coords is not None:
+                sky_model = np.array( [ ['ME0','GAUSSIAN','P0',opt_coords.ra.value,opt_coords.dec.value,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+            else:
+                sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+
+    ## edit spectral index information if necessary
+    if a_1 is not None:
+        for i in np.arange(len(sky_model)):
+            sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
+    
+    write_skymodel (sky_model,'skymodel.txt')
     
 
 if __name__ == "__main__":
@@ -184,7 +205,8 @@ if __name__ == "__main__":
     parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
     parser.add_argument('--model-image', type=str, help='model image to start with', default='')
     parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
+    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='skip vlass search and generate point source model')
 
     args = parser.parse_args()
 
-    main( args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image )
+    main( args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass )
