@@ -78,10 +78,10 @@ inputs:
     type: File[]
     doc: DDS3 solution files from the ddf-pipeline run.
   - id: fitsfiles
-    type: File[]
+    type: File
     doc: The clean mask of the final image from the ddf-pipeline run.
   - id: dicomodels
-    type: File[]
+    type: File
     doc: The clean component model of the final image from the ddf-pipeline run.
   - id: facet_layout
     type: File
