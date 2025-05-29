@@ -5,9 +5,7 @@ label: Prepare delay
 doc: |
     Converts the delay calibrator information into strings.
 
-baseCommand:
-  - python3
-  - prep_delay.py
+baseCommand: TargetListToCoords.py
 
 inputs:
     - id: delay_calibrator
@@ -15,32 +13,25 @@ inputs:
       doc: |
         The file containing the properties and
         coordinates of the delay calibrator.
+      inputBinding:
+        prefix: --target_file
+        separate: true
 
     - id: mode
-      type: string
+      type:
+        type: enum
+        symbols:
+          - "delay_calibration"
+          - "split_directions"
       doc: |
-        A boolean that, if set to true, ensures that
-        the step will only extract the source_id and
-        coordinates of the first entry of the catalogue.
+        The name of the processing mode.
+        Must be either 'delay_calibration' or 'split_directions'.
+      inputBinding:
+        prefix: --mode
+        separate: true
 
 requirements:
   - class: InlineJavascriptRequirement
-  - class: InitialWorkDirRequirement
-    listing:
-      - entryname: prep_delay.py
-        entry: |
-          import json
-          from TargetListToCoords import plugin_main as targetListToCoords
-
-          inputs = json.loads(r"""$(inputs)""")
-
-          target_file = inputs['delay_calibrator']['path']
-          mode = inputs['mode']
-
-          output = targetListToCoords(target_file=target_file, mode=mode)
-
-          with open('./out.json', 'w') as fp:
-              json.dump(output, fp)
 
 hints:
   - class: DockerRequirement
