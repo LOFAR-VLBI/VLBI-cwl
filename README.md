@@ -27,4 +27,4 @@ In this case, the variable `VLBI_ROOT_DIR` must be set to the project root direc
 For example, if run from the project root directory:
 ```
 VLBI_ROOT_DIR=$PWD PYTHONPATH=$PWD/scripts pytest
-``
+```
