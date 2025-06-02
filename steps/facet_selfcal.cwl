@@ -6,34 +6,41 @@ doc: |
     Performs direction independent calibration
     of the international antenna array.
 
-baseCommand:
-    - python3
-    - run_selfcal.py
+baseCommand: python3
+
+arguments:
+  - $(inputs.selfcal.path + "/facetselfcal.py")
 
 inputs:
     - id: msin
       type: Directory
+      inputBinding:
+        position: 1
       doc: |
         Input data phase-shifted to the
         delay calibrator in MeasurementSet format.
 
     - id: skymodel
       type: File?
+      inputBinding:
+        position: 0
+        prefix: --skymodel
+        separate: true
       doc: |
         The skymodel to be used in the first
         cycle in the self-calibration.
 
     - id: configfile
       type: File
+      inputBinding:
+        position: 0
+        prefix: --configpath
+        separate: true
       doc: A plain-text file containing configuration options for self-calibration.
 
     - id: selfcal
       type: Directory
       doc: External self-calibration script.
-
-    - id: h5merger
-      type: Directory
-      doc: External LOFAR helper scripts for merging HDF5 files.
 
 outputs:
     - id: h5parm
@@ -71,27 +78,6 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entry: $(inputs.msin)
-      - entryname: run_selfcal.py
-        entry: |
-          import subprocess
-          import json
-
-          inputs = json.loads(r"""$(inputs)""")
-
-          msin = inputs['msin']['basename']
-          configfile = inputs['configfile']['path']
-          skymodel = inputs['skymodel']['path'] if inputs['skymodel'] else None
-          selfcal = inputs['selfcal']['path']
-          h5merge = inputs['h5merger']['path']
-
-          run_selfcal = (f"python3 {selfcal}/facetselfcal.py {msin}"
-                         f" --helperscriptspath {selfcal}"
-                         f" --configpath {configfile}"
-                         f" --helperscriptspathh5merge {h5merge}")
-          if skymodel:
-            run_selfcal += f" --skymodel {skymodel}"
-
-          subprocess.run(run_selfcal, shell = True)
 
 hints:
   - class: DockerRequirement

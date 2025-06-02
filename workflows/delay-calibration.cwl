@@ -215,8 +215,6 @@ steps:
           source: configfile
         - id: selfcal
           source: selfcal
-        - id: h5merger
-          source: h5merger
         - id: linc
           source: linc
         - id: max_dp3_threads
