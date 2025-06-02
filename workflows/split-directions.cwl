@@ -151,8 +151,6 @@ steps:
           pickValue: first_non_null
         - id: configfile
           source: configfile
-        - id: h5merger
-          source: h5merger
         - id: selfcal
           source: selfcal
         - id: do_selfcal

@@ -33,10 +33,6 @@ inputs:
     type: Directory
     doc: Path of external calibration scripts.
 
-  - id: h5merger
-    type: Directory
-    doc: External LOFAR helper scripts for merging h5 files.
-
   - id: max_dp3_threads
     type: int?
     default: 5
@@ -195,8 +191,6 @@ steps:
         source: configfile
       - id: selfcal
         source: selfcal
-      - id: h5merger
-        source: h5merger
     out:
       - id: h5parm
       - id: images
