@@ -97,6 +97,8 @@ inputs:
      high I/O or memory.
 
 requirements:
+  - class: InplaceUpdateRequirement
+    inplaceUpdate: true
   - class: InitialWorkDirRequirement
     listing:
       - entry: $(inputs.msin)
