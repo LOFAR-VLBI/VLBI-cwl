@@ -3,6 +3,7 @@ name = "VLBI-cwl"
 version = "0.7.1"
 dependencies = [
     "astropy",
+    "bdsf",
     "python-casacore",
     "losoto",
     "numpy",
