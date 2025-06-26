@@ -193,9 +193,9 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
     if a_1 is not None:
         for i in np.arange(len(sky_model)):
             sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
-    
+
     write_skymodel (sky_model,'skymodel.txt')
-    
+
 
 if __name__ == "__main__":
     import argparse
