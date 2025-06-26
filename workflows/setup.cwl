@@ -109,7 +109,7 @@ steps:
         - id: library
           default:
             - scripts/check_Ateam_separation.py
-            - skymodels/Ateam_LBA_CC.skymodel
+            - skymodels/A-Team.skymodel
       out:
         - id: libraries
       scatter: library

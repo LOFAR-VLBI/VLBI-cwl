@@ -6,12 +6,12 @@ doc: |
     Simulates data for the A-team sources based off a skymodel,
     and flags the visibilities of the input MeasuremenSet where
     the model data exceeds the threshold for LBA (50 janskys)
-    or HBA (5 janksys).
+    or HBA (5 janskys).
 
 baseCommand: DP3
 arguments:
   - steps=[filter,clipper,counter]
-  - clipper.sourcedb=Ateam_LBA_CC.skymodel
+  - clipper.sourcedb=A-Team.skymodel
   - clipper.usechannelfreq=False
   - clipper.operation=replace
   - clipper.beamproximitylimit=2000
@@ -50,15 +50,15 @@ inputs:
     doc: |
         Scripts and reference files from the
         LOFAR INitial Calibration pipeline.
-        Must contain `Ateam_LBA_CC.skymodel`.
+        Must contain `A-Team.skymodel`.
 
   - id: sources
     type: string[]?
     default:
-        - "VirA_4_patch"
-        - "CygAGG"
-        - "CasA_4_patch"
-        - "TauAGG"
+      - VirA_Gaussian
+      - CygA_Gaussian
+      - CasA_Gaussian
+      - TauA_Gaussian
     inputBinding:
       position: 0
       prefix: clipper.sources=
