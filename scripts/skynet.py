@@ -152,7 +152,7 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
     ## gaia information if available - else use panstarrs if it is available
     if "gaia_id" in t.keys() and t['gaia_id'].data[src_idx] != "--":
         opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
-    elif t['ps_id'].data[src_idx] !="--":
+    elif "ps_id" in t.keys() and t['ps_id'].data[src_idx] != "--":
         opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
     else:
         opt_coords = None
