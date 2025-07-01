@@ -1,2 +1,3 @@
-# (Name, Type, Ra, Dec, I, MajorAxis, MinorAxis, Orientation) = format
-ME0, GAUSSIAN, 14:08:15.23301022, +52.29.52.03714719, 0.553347, 0.100000, 0.000000, 0.000000
+# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format
+, , P0, 00:00:00, +00.00.00
+ME0,GAUSSIAN,P0,14:08:15.23301022,+52.29.52.03714719,0.553346617196826,0.0,0.0,0.0,0.1,0.0,0.0,144e+06,[-0.5],true
