@@ -150,7 +150,7 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
     smodel = t['Total_flux'].data[src_idx]*1.0e-3
 
     ## gaia information if available - else use panstarrs if it is available
-    if t['gaia_id'].data[src_idx] != "--":
+    if "gaia_id" in t.keys() and t['gaia_id'].data[src_idx] != "--":
         opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
     elif t['ps_id'].data[src_idx] !="--":
         opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
