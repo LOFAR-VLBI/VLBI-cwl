@@ -158,7 +158,7 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
         opt_coords = None
 
     ## spectral index information
-    if t['alpha_1'].data[src_idx] != "--":
+    if {"alpha_1", "alpha_2"}.issubset(t.keys()) and t['alpha_1'].data[src_idx] != "--":
         a_1 = t['alpha_1'].data[src_idx]
         a_2 = t['alpha_2'].data[src_idx]
     else:
