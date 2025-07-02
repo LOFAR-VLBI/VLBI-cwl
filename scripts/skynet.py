@@ -16,8 +16,8 @@ def write_skymodel (model, outname = None):
             skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format\n" )
             skymodel.write(', , P0, 00:00:00, +00.00.00\n')
             for i in range(len(model)):
-                ra = model[i][3]
-                dec = model[i][4]
+                sra = model[i][3]
+                sdec = model[i][4]
                 # the angles RA and DEC should be sexigesimal coordinates, which for
                 # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
                 # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
