@@ -55,6 +55,8 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
         tot_flux = tot_flux + src.total_flux
     flux_scaling = smodel/tot_flux
     ## get positional corrections if available
+    delta_ra = 0.
+    delta_dec = 0.
     if opt_coords is not None:
         seps = []
         for src in sources:
