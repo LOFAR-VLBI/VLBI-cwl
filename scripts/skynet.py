@@ -68,12 +68,6 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
         if seps[minsep_idx] < astroSearchRadius:
             delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
             delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
-        else:
-            delta_ra = 0.
-            delta_dec = 0.
-    else:
-        delta_ra = 0.
-        delta_dec = 0.
     tmp = []
     i = 0
     for src in sources:
