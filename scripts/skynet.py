@@ -81,7 +81,7 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
         tmp.append(component)
         i = i + 1
     sky_model = np.array(tmp)
-    return(sky_model)
+    return sky_model
 
 ################## skynet ##############################
 
