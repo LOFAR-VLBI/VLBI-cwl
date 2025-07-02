@@ -23,9 +23,8 @@ def write_skymodel (model, outname = None):
                 # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
                 # These should be formatted as strings. If, instead, the angles are
                 # given in decimal degrees (floats), a conversion to the previous format is applied.
-                if isinstance( (ra, dec), (str, str) ):
-                if not isinstance((sra, sdec), (str, str):
-                    s = SkyCoord(ra,dec,unit='degree')
+                if not isinstance((sra, sdec), (str, str)):
+                    s = SkyCoord(sra,sdec,unit='degree')
                     s = s.to_string(style='hmsdms')
                     sra = s.split()[0]
                     sdec = s.split()[1]
