@@ -1,7 +1,6 @@
 cwlVersion: v1.2
 class: CommandLineTool
-id: generate_parset_split_directions
-label: Generate DP3 parset for split directions
+id: generate_parset_split_directions_no_solutions
 doc: |
     Generates a DP3 parameterset to split off
     directions from a given MeasurementSet.
@@ -34,12 +33,6 @@ inputs:
       doc: |
         Time resolution in seconds for the third averaging.
 
-    - id: beamdir_delay_cal
-      type: string?
-      doc: |
-        Direction in which the primary beam correction for
-        the delay calibration has been done.
-
 outputs:
   - id: parset
     type: stdout
@@ -54,36 +47,19 @@ requirements:
             steps                       = [split]
 
             split.replaceparms          = [phaseshift.phasecenter, applytargetbeam.direction, msout.name]
-            split.steps                 = [phaseshift, averager1, applydelaybeam, applycal, applytargetbeam, averager2, msout]
+            split.steps                 = [phaseshift, averager, applytargetbeam, msout]
 
             phaseshift.type             = phaseshift
             phaseshift.phasecenter      = $(inputs.phase_centers)
 
-            averager1.type              = averager
-            averager1.freqresolution    = 48.82kHz
-            averager1.timeresolution    = 4.
+            averager.type              = averager
+            averager.freqresolution    = $(inputs.frequency_resolution)
+            averager.timeresolution    = $(inputs.time_resolution)
 
-            # Beam and solutions are fulljones, so they don't commute.
-            applydelaybeam.type              = applybeam
-            applydelaybeam.direction         = $(inputs.beamdir_delay_cal)
-            applydelaybeam.beammode          = full
-            applydelaybeam.updateweights     = True
-
-            # Apply delay calibrator solutions now.
-            applycal.type               = applycal
-            applycal.correction         = fulljones
-            applycal.soltab             = [amplitude000, phase000]
-            
-            # Only now can we properly apply the primary beam of the target.
-            # DP3 understands the previous applybeam. No explicit undo needed.
             applytargetbeam.type              = applybeam
             applytargetbeam.direction         = $(inputs.phase_centers)
             applytargetbeam.beammode          = full
             applytargetbeam.updateweights     = True
-
-            averager2.type              = averager
-            averager2.freqresolution    = $(inputs.frequency_resolution)
-            averager2.timeresolution    = $(inputs.time_resolution)
 
             msout.storagemanager        = dysco
             msout.name                  = $(inputs.msout_names)

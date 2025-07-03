@@ -43,7 +43,7 @@ requirements:
       - entry: $(inputs.selfcal)
 
 arguments:
-  - $( inputs.selfcal.path + '/source_selection/phasediff_output.py' )
+  - $( inputs.selfcal.path + '/submods/source_selection/phasediff_output.py' )
 
 hints:
   - class: DockerRequirement

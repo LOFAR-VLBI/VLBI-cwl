@@ -25,7 +25,7 @@ inputs:
         containing the target directions.
 
     - id: delay_solutions
-      type: File
+      type: File?
       doc: |
         Delay calibrator solutions. This is used
         to determine the beam direction.
@@ -34,7 +34,10 @@ outputs:
     - id: parset
       type: File
       doc: The parameterset file for DP3.
-      outputSource: generate_parset/parset
+      outputSource:
+        - generate_parset/parset
+        - generate_parset_nosol/parset
+      pickValue: first_non_null
 
 steps:
     - id: get_coordinates
@@ -76,6 +79,7 @@ steps:
       out:
         - id: delay_cal_dir
       run: ../../steps/get_delay_cal_direction.cwl
+      when: $(inputs.delay_solutions != null)
 
     - id: get_delay_cal_beam_dir
       label: get_delay_cal_beam_direction
@@ -92,6 +96,7 @@ steps:
         - id: coordinates
         - id: logfile
       run: ../../steps/prep_delay.cwl
+      when: $(inputs.delay_calibrator != null)
 
     - id: generate_parset
       label: generate_parset
@@ -107,3 +112,20 @@ steps:
       out:
         - id: parset
       run: ../../steps/generate_parset_split.cwl
+      when: $(inputs.beamdir_delay_cal != null)
+
+    - id: generate_parset_nosol
+      label: generate_parset_nosol
+      doc: |
+        Generate direction parset without applying solutions
+      in:
+        - id: msout_names
+          source: generate_filenames/msout_names
+        - id: phase_centers
+          source: get_coordinates/coordinates
+        - id: delay_solutions
+          source: delay_solutions
+      out:
+        - id: parset
+      run: ../../steps/generate_parset_split_nosol.cwl
+      when: $(inputs.delay_solutions == null)

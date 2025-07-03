@@ -14,7 +14,7 @@ stderr: get_delay_dir_err.txt
 inputs:
     - id: delay_solutions
       label: delay_calibrator_solutions
-      type: File
+      type: File?
       inputBinding:
         position: 0
         prefix: --h5parm
