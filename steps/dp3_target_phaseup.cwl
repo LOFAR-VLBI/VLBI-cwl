@@ -24,7 +24,7 @@ inputs:
         separate: false
         shellQuote: false
     - id: delay_solset
-      type: File
+      type: File?
       doc: Input delay solution set.
       inputBinding:
         position: 2
