@@ -5,8 +5,8 @@ doc: |-
   Generates a text file containing the names of MeasurementSets, used by e.g. the DDF-pipeline.
   This will be the input for the subtract. This requires DDF-pipeline to be installed.
 
-baseCommand:
-  - make_mslist_subtract.sh
+baseCommand: echo
+stdout: big-mslist.txt
 
 inputs:
   - id: ms
@@ -14,19 +14,9 @@ inputs:
     doc: Input MeasurementSet.
     inputBinding:
       position: 1
+      valueFrom: $(self.basename)
 
 outputs:
   - id: mslist
-    type: File
+    type: stdout
     doc: Text file containing the names of the MeasurementSet.
-    outputBinding:
-      glob: big-mslist.txt
-
-requirements:
-  - class: InitialWorkDirRequirement
-    listing:
-      - entry: $(inputs.ms)
-
-hints:
-  - class: DockerRequirement
-    dockerPull: vlbi-cwl
