@@ -219,6 +219,8 @@ steps:
           source: linc
         - id: max_dp3_threads
           source: max_dp3_threads
+        - id: number_cores
+          source: number_cores
       out:
         - id: msout
         - id: solutions
