@@ -225,6 +225,8 @@ steps:
           source: max_dp3_threads
         - id: model_image
           source: model_image
+        - id: number_cores
+          source: number_cores
       out:
         - id: msout
         - id: solutions

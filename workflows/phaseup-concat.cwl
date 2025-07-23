@@ -38,6 +38,13 @@ inputs:
     default: 5
     doc: The maximum number of threads DP3 should use per process.
 
+  - id: number_cores
+    type: int?
+    default: 12
+    doc: |
+      Number of cores to use per job for tasks with
+      high I/O or memory.
+
   - id: linc
     type: Directory
     doc: |
@@ -197,6 +204,8 @@ steps:
         source: configfile
       - id: selfcal
         source: selfcal
+      - id: number_cores
+        source: number_cores
     out:
       - id: h5parm
       - id: images

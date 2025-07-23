@@ -42,6 +42,11 @@ inputs:
       type: Directory
       doc: External self-calibration script.
 
+    - id: number_cores
+      type: int?
+      default: 12
+      doc: The number of cores that should be allocated for the self-calibration.
+
 outputs:
     - id: h5parm
       type: File
@@ -78,6 +83,8 @@ requirements:
   - class: InitialWorkDirRequirement
     listing:
       - entry: $(inputs.msin)
+  - class: ResourceRequirement
+    coresMin: $(inputs.number_cores)
 
 hints:
   - class: DockerRequirement

@@ -18,6 +18,10 @@ inputs:
     - id: msin
       type: Directory[]
       doc: The input concatenated MS.
+    - id: phasediff_score
+      type: float
+      default: 2.3
+      doc: Phasediff-score for calibrator selection <2.3 good for DD-calibrators and <0.7 good for DI-calibrators.
     - id: lofar_helpers
       type: Directory
       doc: Path to lofar_helpers directory.
@@ -95,6 +99,8 @@ steps:
           source: get_selection_scores/phasediff_score_csv
         - id: msin
           source: msin
+        - id: phasediff_score
+          source: phasediff_score
       out:
         - best_ms
       run: ../../steps/select_best_directions.cwl

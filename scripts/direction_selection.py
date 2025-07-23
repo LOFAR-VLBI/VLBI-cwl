@@ -90,7 +90,7 @@ def match_source_id(mslist: list = None, source_id: str = None):
     """
 
     for ms in mslist:
-        if parse_source_id(ms)==source_id:
+        if parse_source_id(ms) in source_id:
             return ms
 
     # If no match (should not arrive here)
@@ -142,6 +142,9 @@ def main():
 
     # Get dataframe after filtering for sources within 0.1 degrees distance from each other
     df = filter_too_nearest_neighbours(args.csv)
+
+    # Sort values
+    df = df.sort_values("spd_score", ascending=True)
 
     for source in df.set_index('source').iterrows():
         name = source[0]

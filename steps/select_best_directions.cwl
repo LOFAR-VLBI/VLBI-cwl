@@ -22,6 +22,13 @@ inputs:
       inputBinding:
         prefix: "--csv"
         position: 2
+    - id: phasediff_score
+      type: float
+      default: 2.3
+      doc: Phasediff score, see Section 3.3.1 from de Jong et al. (2024; https://arxiv.org/abs/2407.13247)
+      inputBinding:
+        prefix: "--best_score"
+        position: 3
 
 outputs:
     - id: best_ms
