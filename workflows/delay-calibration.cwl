@@ -126,7 +126,7 @@ inputs:
 
     - id: model_image
       type: File?
-      doc: Image to use as an initial delay calibration model.
+      doc: Image to generate an initial delay calibration model from.
 
 steps:
     - id: setup
