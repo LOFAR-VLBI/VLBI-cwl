@@ -24,7 +24,7 @@ inputs:
 
     - id: model_image
       type: File?
-      doc: Image to use as an initial delay calibrator model.
+      doc: Image to generate an initial delay calibrator model from.
       inputBinding:
         position: 1
         prefix: --model-image
