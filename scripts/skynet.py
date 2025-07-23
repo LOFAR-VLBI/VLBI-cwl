@@ -60,7 +60,7 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
             src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
             sep = src_coords.separation(opt_coords).to("arcsec").value
             seps.append(sep)
-        minsep_idx = np.where( seps == np.min(seps) )[0][0]
+        minsep_idx = np.argmin(seps)
         minsep_src = sources[minsep_idx]
         if seps[minsep_idx] < astroSearchRadius:
             delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
