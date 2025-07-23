@@ -58,7 +58,7 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
         seps = []
         for src in sources:
             src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
-            sep = src_coords.separation(opt_coords).value*3600
+            sep = src_coords.separation(opt_coords).to("arcsec").value
             seps.append(sep)
         minsep_idx = np.where( seps == np.min(seps) )[0][0]
         minsep_src = sources[minsep_idx]
