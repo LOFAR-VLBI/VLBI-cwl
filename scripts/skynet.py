@@ -46,7 +46,7 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
         maxval = np.max( (maxval, src.total_flux) )
     img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
     sources = img.sources
-    ## get flux scaling
+    # Scale model flux density to the provided value.
     tot_flux = 0.
     for src in sources:
         tot_flux = tot_flux + src.total_flux
