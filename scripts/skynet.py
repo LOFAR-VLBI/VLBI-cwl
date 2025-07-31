@@ -98,7 +98,6 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
     tmp = MS.split('/')[-1]
     MS_src = tmp.split('_')[0]
 
-    ## open the delay calibrator file to get some information
     t = Table.read( delayCalFile, format='csv' )
 
     mycols = t.colnames
