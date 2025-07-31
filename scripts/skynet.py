@@ -32,10 +32,10 @@ def write_skymodel (model, outname = None):
                 sdec = sdec.replace('d','.').replace('m','.').replace('s','')
                 model[i][3] = sra
                 model[i][4] = sdec
-                ss_to_write = ''
-                for j in np.arange(0,len(model[i])):
-                    ss_to_write = ss_to_write + str(model[i][j]) + ','
-                ss_to_write = ss_to_write.rstrip(',')
+                number_elements = len(model[i])
+                ss_to_write = ",".join(
+                    str(model[i][j]) for j in range(number_elements)
+                )
                 skymodel.write( '{:s}\n'.format(ss_to_write) )
 
 def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
