@@ -8,35 +8,34 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import bdsf
 
-def write_skymodel (model, outname = None):
+def write_skymodel (model, outname):
 
     print(f'writing the skymodel for: {model}')
-    if outname:
-        with open(outname, 'w') as skymodel:
-            skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format\n" )
-            skymodel.write(', , P0, 00:00:00, +00.00.00\n')
-            for i in range(len(model)):
-                sra = model[i][3]
-                sdec = model[i][4]
-                # the angles RA and DEC should be sexigesimal coordinates, which for
-                # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
-                # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
-                # These should be formatted as strings. If, instead, the angles are
-                # given in decimal degrees (floats), a conversion to the previous format is applied.
-                if not isinstance((sra, sdec), (str, str)):
-                    s = SkyCoord(sra,sdec,unit='degree')
-                    s = s.to_string(style='hmsdms')
-                    sra = s.split()[0]
-                    sdec = s.split()[1]
-                sra = sra.replace('h',':').replace('m',':').replace('s','')
-                sdec = sdec.replace('d','.').replace('m','.').replace('s','')
-                model[i][3] = sra
-                model[i][4] = sdec
-                number_elements = len(model[i])
-                ss_to_write = ",".join(
-                    str(model[i][j]) for j in range(number_elements)
-                )
-                skymodel.write( '{:s}\n'.format(ss_to_write) )
+    with open(outname, 'w') as skymodel:
+        skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format\n" )
+        skymodel.write(', , P0, 00:00:00, +00.00.00\n')
+        for i in range(len(model)):
+            sra = model[i][3]
+            sdec = model[i][4]
+            # the angles RA and DEC should be sexigesimal coordinates, which for
+            # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
+            # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
+            # These should be formatted as strings. If, instead, the angles are
+            # given in decimal degrees (floats), a conversion to the previous format is applied.
+            if not isinstance((sra, sdec), (str, str)):
+                s = SkyCoord(sra,sdec,unit='degree')
+                s = s.to_string(style='hmsdms')
+                sra = s.split()[0]
+                sdec = s.split()[1]
+            sra = sra.replace('h',':').replace('m',':').replace('s','')
+            sdec = sdec.replace('d','.').replace('m','.').replace('s','')
+            model[i][3] = sra
+            model[i][4] = sdec
+            number_elements = len(model[i])
+            ss_to_write = ",".join(
+                str(model[i][j]) for j in range(number_elements)
+            )
+            skymodel.write( '{:s}\n'.format(ss_to_write) )
 
 def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
     img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
