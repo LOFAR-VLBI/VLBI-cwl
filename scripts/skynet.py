@@ -82,6 +82,13 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
 ################## skynet ##############################
 
 def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False):
+    """
+    Generates a skymodel for sources in delayCalFile for delay calibration.
+    Uses modelImage as a base model if provided, otherwise will construct a
+    point-source model. Will include contributions from Gaia or panstarrs if
+    these are available in the catalogue and are within astroSearchRadius of
+    the target.
+    """
 
     ## make sure the parameters are the correct format
     # MS is assumed to be of the form:
