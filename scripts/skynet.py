@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
     parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
-    parser.add_argument('--model-image', type=str, help='model image to start with', default='')
+    parser.add_argument('--model-image', type=str, help='image for generating starting model', default='')
     parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
     parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='skip vlass search and generate point source model')
 
