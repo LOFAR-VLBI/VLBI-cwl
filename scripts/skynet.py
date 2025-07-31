@@ -99,12 +99,11 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
 
     t = Table.read( delayCalFile, format='csv' )
 
-    mycols = t.colnames
     # Check if the skymodel uses a LBCS-format catalogue,
     # which has coordinates in columns 'RA' and 'DEC',
     # or if it uses a LoTSS catalogue, which has its
     # coordinates in columns called 'RA_LOTSS' and 'DEC_LOTSS'
-    if (('RA' in mycols) and ('DEC' in mycols)):
+    if (('RA' in t.colnames) and ('DEC' in t.colnames)):
         ra_col = 'RA'
         de_col = 'DEC'
     else:
