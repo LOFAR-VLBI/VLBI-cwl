@@ -158,26 +158,57 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
     if os.path.isfile(modelImage):
         ## a model image is specified, use it
         print('Using user-specified model {:s}'.format(modelImage))
-        sky_model = model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=astroSearchRadius )
+        sky_model = model_from_image(
+            modelImage,
+            smodel,
+            opt_coords,
+            astroSearchRadius=astroSearchRadius
+        )
     else:
+        used_vlass = False
         if not skip_vlass:
             ## search for a vlass image
             lbcs_id = t[src_idx]['Observation']
-            vlass_file = glob.glob( os.path.join( os.path.dirname(delayCalFile), '{:s}_vlass.fits'.format(lbcs_id) ) )
-            if len(vlass_file) > 0:
-                sky_model = model_from_image( vlass_file[0], smodel, opt_coords, astroSearchRadius=astroSearchRadius )
+            vlass_file = glob.glob(
+                os.path.join(
+                    os.path.dirname(delayCalFile),
+                    '{:s}_vlass.fits'.format(lbcs_id)
+                )
+            )
+            if len(vlass_file) > 0 and os.path.isfile(vlass_file[0]):
+                print(
+                    'Generating a model from image {:s}.'.format(vlas_file[0])
+                )
+                sky_model = model_from_image(
+                    vlass_file[0],
+                    smodel,
+                    opt_coords,
+                    astroSearchRadius=astroSearchRadius
+                )
+                used_vlass = True
             else:
-                print('VLASS image not found, generating a point source model')
-                if opt_coords is not None:
-                    sky_model = np.array( [ ['ME0','GAUSSIAN','P0',opt_coords.ra.value,opt_coords.dec.value,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
-                else:
-                    sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
-        else:
-            print('generating a point source model')
-            if opt_coords is not None:
-                sky_model = np.array( [ ['ME0','GAUSSIAN','P0',opt_coords.ra.value,opt_coords.dec.value,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
-            else:
-                sky_model = np.array( [ ['ME0','GAUSSIAN','P0',ra,dec,smodel,0.0,0.0,0.0,0.1,0.0,0.0,'144e+06','[-0.5]', 'true'] ] )
+                print('No VLASS image found.')
+        if not used_vlass:
+            print('Generating a point source model.')
+            sky_model = np.array(
+                [[
+                    'ME0',
+                    'GAUSSIAN',
+                    'P0',
+                    opt_coords.ra.value if opt_coords is not None else ra,
+                    opt_coords.dec.value if opt_coords is not None else dec,
+                    smodel,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.1,
+                    0.0,
+                    0.0,
+                    '144e+06',
+                    '[-0.5]',
+                    'true'
+                ]]
+            )
 
     ## edit spectral index information if necessary
     if a_1 is not None:
