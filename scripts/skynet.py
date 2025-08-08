@@ -163,7 +163,6 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
 
 
     if os.path.isfile(modelImage):
-        ## a model image is specified, use it
         print('Using user-specified model {:s}'.format(modelImage))
         sky_model = model_from_image(
             modelImage,
