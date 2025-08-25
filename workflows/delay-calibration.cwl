@@ -129,9 +129,6 @@ inputs:
       type: File?
       doc: Image to generate an initial delay calibration model from.
 
-    - id: lofar_helpers
-      type: Directory
-      doc: The LOFAR helpers directory.
 
 steps:
     - id: setup
@@ -253,7 +250,7 @@ steps:
           source:
             - phaseup/solutions
         - id: lofar_helpers
-          source: lofar_helpers
+          source: h5merger
       out:
         - id: ms_out
         - id: logfile
