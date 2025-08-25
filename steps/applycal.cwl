@@ -8,7 +8,7 @@ baseCommand:
 
 inputs:
     - id: ms
-      type: Directory[]
+      type: Directory
       doc: Input MeasurementSet
       inputBinding:
         position: 5
@@ -25,7 +25,7 @@ inputs:
 
 outputs:
     - id: ms_out
-      type: Directory[]
+      type: Directory
       doc: Output MeasurementSet with solutions applied
       outputBinding:
         glob: "applied_*"
