@@ -22,6 +22,7 @@ requirements:
   - class: MultipleInputFeatureRequirement
   - class: StepInputExpressionRequirement
   - class: InlineJavascriptRequirement
+  - class: ScatterFeatureRequirement
 
 inputs:
     - id: msin
