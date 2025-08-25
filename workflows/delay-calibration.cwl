@@ -253,8 +253,8 @@ steps:
         - id: lofar_helpers
           source: lofar_helpers
       out:
-        - ms_out
-        - logfile
+        - id: ms_out
+        - id: logfile
       run: ../steps/applycal.cwl
       label: apply_delay_allms
 
@@ -310,7 +310,7 @@ outputs:
 
   - id: msouts_apply_delay
     outputSource:
-      - apply_delay_allms/output
+      - apply_delay_allms/ms_out
     pickValue: all_non_null
     type: Directory[]?
     doc: |
