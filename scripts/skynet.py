@@ -1,49 +1,100 @@
 #!/usr/bin/env python3
 import numpy as np
 import re
+import os
+import glob
 
 from astropy.coordinates import SkyCoord
 from astropy.table import Table
+import bdsf
 
-
-def write_skymodel (ra, dec, model, outname = None):
+def write_skymodel (model, outname):
 
     print(f'writing the skymodel for: {model}')
+    with open(outname, 'w') as skymodel:
+        skymodel.write( "# (Name, Type, Patch, Ra, Dec, I, Q, U, V, MajorAxis, MinorAxis, Orientation, ReferenceFrequency='144e+06', SpectralIndex='[]', LogarithmicSI) = format\n" )
+        skymodel.write(', , P0, 00:00:00, +00.00.00\n')
+        for i in range(len(model)):
+            sra = model[i][3]
+            sdec = model[i][4]
+            # the angles RA and DEC should be sexigesimal coordinates, which for
+            # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
+            # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
+            # These should be formatted as strings. If, instead, the angles are
+            # given in decimal degrees (floats), a conversion to the previous format is applied.
+            if not isinstance((sra, sdec), (str, str)):
+                s = SkyCoord(sra,sdec,unit='degree')
+                s = s.to_string(style='hmsdms')
+                sra = s.split()[0]
+                sdec = s.split()[1]
+            sra = sra.replace('h',':').replace('m',':').replace('s','')
+            sdec = sdec.replace('d','.').replace('m','.').replace('s','')
+            model[i][3] = sra
+            model[i][4] = sdec
+            number_elements = len(model[i])
+            ss_to_write = ",".join(
+                str(model[i][j]) for j in range(number_elements)
+            )
+            skymodel.write( '{:s}\n'.format(ss_to_write) )
 
-    if outname:
-        with open(outname, 'w') as skymodel:
-            skymodel.write ('# (Name, Type, Ra, Dec, I, MajorAxis, MinorAxis, Orientation) = format\n')
-            for i in range(len(model)):
-                # the angles RA and DEC should be sexigesimal coordinates, which for
-                # RA is in hours, minutes, seconds (format "XXhYYmZZs") and for
-                # DEC is in degrees, minutes, seconds (format "XXdYYmZZs").
-                # These should be formatted as strings. If, instead, the angles are
-                # given in decimal degrees (floats), a conversion to the previous format is applied.
-                if isinstance( (ra, dec), (str, str) ):
-                    sra = ra
-                    sdec = dec
-                else:
-                    cosd = 3600.*np.cos(np.deg2rad(dec))
-                    s = SkyCoord(ra-model[i,0]/cosd,dec+model[i,1]/3600,unit='degree')
-                    s = s.to_string(style='hmsdms')
-                    sra = s.split()[0]
-                    sdec = s.split()[1]
-                sra = sra.replace('h',':').replace('m',':').replace('s','')
-                sdec = sdec.replace('d','.').replace('m','.').replace('s','')
-                print('ME%d, GAUSSIAN, %s, %s, %f, %f, %f, %f'%(i,sra,sdec,model[i,2],\
-                      model[i,3],model[i,3]*model[i,4],np.rad2deg(model[i,5])))
-                skymodel.write('ME%d, GAUSSIAN, %s, %s, %f, %f, %f, %f\n'%(i,sra,sdec,model[i,2],\
-                               model[i,3],model[i,3]*model[i,4],np.rad2deg(model[i,5])))
+def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
+    sources = img.sources
+    maxval = 0.
+    for src in sources:
+        maxval = np.max( (maxval, src.total_flux) )
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
+    sources = img.sources
+    # Scale model flux density to the provided value.
+    tot_flux = 0.
+    for src in sources:
+        tot_flux = tot_flux + src.total_flux
+    flux_scaling = smodel/tot_flux
+    ## get positional corrections if available
+    delta_ra = 0.
+    delta_dec = 0.
+    if opt_coords is not None:
+        seps = []
+        for src in sources:
+            src_coords = SkyCoord( src.posn_sky_centroid[0], src.posn_sky_centroid[1], unit='deg' )
+            sep = src_coords.separation(opt_coords).to("arcsec").value
+            seps.append(sep)
+        minsep_idx = np.argmin(seps)
+        minsep_src = sources[minsep_idx]
+        if seps[minsep_idx] < astroSearchRadius:
+            delta_ra = opt_coords.ra.value - minsep_src.posn_sky_centroid[0]
+            delta_dec = opt_coords.dec.value - minsep_src.posn_sky_centroid[1]
+    tmp = []
+    i = 0
+    for src in sources:
+        ra = src.posn_sky_centroid[0] + delta_ra
+        dec = src.posn_sky_centroid[1] + delta_dec
+        tflux = src.total_flux * flux_scaling
+        dcmaj = src.deconv_size_sky[0]*3600.
+        dcmin = src.deconv_size_sky[1]*3600.
+        dcpa = src.deconv_size_sky[2]
+        component = [ 'ME{:s}'.format(str(i)),'GAUSSIAN','P0',ra,dec,tflux,0.0, 0.0, 0.0, dcmaj, dcmin, dcpa, '144e+06', "[-0.7]", 'true' ]
+        tmp.append(component)
+        i = i + 1
+    sky_model = np.array(tmp)
+    return sky_model
 
 ################## skynet ##############################
 
-def main (MS, delayCalFile):
+def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False):
+    """
+    Generates a skymodel for sources in delayCalFile for delay calibration.
+    Uses modelImage as a base model if provided, otherwise will construct a
+    point-source model. Will include contributions from Gaia or panstarrs if
+    these are available in the catalogue and are within astroSearchRadius of
+    the target.
+    """
 
     ## make sure the parameters are the correct format
     # MS is assumed to be of the form:
     # /path/to/MS/{observation_id}_*
-    # We are only interested in {observation_id} here,
-    # and discard the rest.
+    # where observation_id is either the LBCS observation id
+    # or the ILTJ name of the source
 
     # {observation_id} should start with either 'S', 'L', 'I'
     # followed by a number of digits
@@ -53,16 +104,13 @@ def main (MS, delayCalFile):
     tmp = MS.split('/')[-1]
     MS_src = tmp.split('_')[0]
 
-    ## get flux from best_delay_calibrators.csv
     t = Table.read( delayCalFile, format='csv' )
-    ## find the RA column
 
-    mycols = t.colnames
     # Check if the skymodel uses a LBCS-format catalogue,
     # which has coordinates in columns 'RA' and 'DEC',
     # or if it uses a LoTSS catalogue, which has its
     # coordinates in columns called 'RA_LOTSS' and 'DEC_LOTSS'
-    if (('RA' in mycols) and ('DEC' in mycols)):
+    if (('RA' in t.colnames) and ('DEC' in t.colnames)):
         ra_col = 'RA'
         de_col = 'DEC'
     else:
@@ -98,9 +146,83 @@ def main (MS, delayCalFile):
     dec = t[de_col].data[src_idx]
     smodel = t['Total_flux'].data[src_idx]*1.0e-3
 
-    print('generating point model')
-    point_model = np.array( [ [0.0,0.0,smodel,0.1,0.0,0.0] ] )
-    write_skymodel (ra,dec,point_model,'skymodel.txt')
+    ## gaia information if available - else use panstarrs if it is available
+    if "gaia_id" in t.keys() and t['gaia_id'].data[src_idx] != "--":
+        opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
+    elif "ps_id" in t.keys() and t['ps_id'].data[src_idx] != "--":
+        opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
+    else:
+        opt_coords = None
+
+    ## spectral index information
+    if {"alpha_1", "alpha_2"}.issubset(t.keys()) and t['alpha_1'].data[src_idx] != "--":
+        a_1 = t['alpha_1'].data[src_idx]
+        a_2 = t['alpha_2'].data[src_idx]
+    else:
+        a_1, a_2 = None, None
+
+
+    if os.path.isfile(modelImage):
+        print('Using user-specified model {:s}'.format(modelImage))
+        sky_model = model_from_image(
+            modelImage,
+            smodel,
+            opt_coords,
+            astroSearchRadius=astroSearchRadius
+        )
+    else:
+        used_vlass = False
+        if not skip_vlass:
+            ## search for a vlass image
+            lbcs_id = t[src_idx]['Observation']
+            vlass_file = glob.glob(
+                os.path.join(
+                    os.path.dirname(delayCalFile),
+                    '{:s}_vlass.fits'.format(lbcs_id)
+                )
+            )
+            if len(vlass_file) > 0 and os.path.isfile(vlass_file[0]):
+                print(
+                    'Generating a model from image {:s}.'.format(vlass_file[0])
+                )
+                sky_model = model_from_image(
+                    vlass_file[0],
+                    smodel,
+                    opt_coords,
+                    astroSearchRadius=astroSearchRadius
+                )
+                used_vlass = True
+            else:
+                print('No VLASS image found.')
+        if not used_vlass:
+            print('Generating a point source model.')
+            sky_model = np.array(
+                [[
+                    'ME0',
+                    'GAUSSIAN',
+                    'P0',
+                    opt_coords.ra.value if opt_coords is not None else ra,
+                    opt_coords.dec.value if opt_coords is not None else dec,
+                    smodel,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.1,
+                    0.0,
+                    0.0,
+                    '144e+06',
+                    '[-0.5]',
+                    'true'
+                ]]
+            )
+
+    ## edit spectral index information if necessary
+    if (a_1 is not None) and (a_2 is not None):
+        for i in range(len(sky_model)):
+            sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
+
+    write_skymodel (sky_model,'skymodel.txt')
+
 
 if __name__ == "__main__":
     import argparse
@@ -108,7 +230,10 @@ if __name__ == "__main__":
 
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
     parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
+    parser.add_argument('--model-image', type=str, help='image for generating starting model', default='')
+    parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
+    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='skip vlass search and generate point source model')
 
     args = parser.parse_args()
 
-    main( args.MS, delayCalFile=args.delay_cal_file )
+    main( args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass )
