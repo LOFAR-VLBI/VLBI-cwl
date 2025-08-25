@@ -257,6 +257,7 @@ steps:
         - id: ms_out
         - id: logfile
       run: ../steps/applycal.cwl
+      scatter: ms
       label: apply_delay_allms
 
     - id: store_logs
