@@ -128,6 +128,10 @@ inputs:
       type: File?
       doc: Image to generate an initial delay calibration model from.
 
+    - id: lofar_helpers
+      type: Directory
+      doc: The LOFAR helpers directory.
+
 steps:
     - id: setup
       label: setup
@@ -236,6 +240,24 @@ steps:
       run: ./phaseup-concat.cwl
       label: phaseup
 
+    - id: apply_delay_allms
+      in: 
+        - id: ms
+          source:
+            - process_ddf/msout
+            - sort-concatenate-flag/msout
+            - msin
+        - id: h5parm
+          source:
+            - phaseup/solutions
+        - id: lofar_helpers
+          source: lofar_helpers
+      out:
+        - ms_out
+        - logfile
+      run: ../steps/applycal.cwl
+      label: apply_delay_allms
+
     - id: store_logs
       in:
         - id: files
@@ -285,6 +307,16 @@ outputs:
     doc: |
         The concatenated data in MeasurementSet format after
         A-team clipping and optional DDF solutions applied.
+
+  - id: msouts_apply_delay
+    outputSource:
+      - apply_delay_allms/output
+    pickValue: all_non_null
+    type: Directory[]?
+    doc: |
+        The concatenated data in MeasurementSet format after
+        A-team clipping, optional DDF solutions applied, and 
+        delay solutions applied.
 
   - id: logs
     outputSource: store_logs/dir
