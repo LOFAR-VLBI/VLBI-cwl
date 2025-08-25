@@ -247,6 +247,7 @@ steps:
             - process_ddf/msout
             - sort-concatenate-flag/msout
             - msin
+          pickValue: first_non_null
         - id: h5parm
           source:
             - phaseup/solutions
