@@ -183,7 +183,7 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
             )
             if len(vlass_file) > 0 and os.path.isfile(vlass_file[0]):
                 print(
-                    'Generating a model from image {:s}.'.format(vlas_file[0])
+                    'Generating a model from image {:s}.'.format(vlass_file[0])
                 )
                 sky_model = model_from_image(
                     vlass_file[0],
