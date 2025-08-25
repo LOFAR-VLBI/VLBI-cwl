@@ -312,7 +312,7 @@ outputs:
     outputSource:
       - apply_delay_allms/ms_out
     pickValue: all_non_null
-    type: Directory[]?
+    type: Directory[]
     doc: |
         The concatenated data in MeasurementSet format after
         A-team clipping, optional DDF solutions applied, and 
