@@ -71,10 +71,10 @@ inputs:
     - id: clip_sources
       type: string[]?
       default:
-          - "VirA_4_patch"
-          - "CygAGG"
-          - "CasA_4_patch"
-          - "TauAGG"
+          - "VirA_Gaussian"
+          - "CygA_Gaussian"
+          - "CasA_Gaussian"
+          - "TauA_Gaussian"
       doc: |
         The patches of sources that should be flagged.
         These should be present in the LINC skymodel.
