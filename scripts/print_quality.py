@@ -6,6 +6,64 @@ from astropy.io import fits
 import numpy as np
 import os
 from pathlib import Path
+import matplotlib.pyplot as plt 
+
+def radial_rms_square(image2d, dr=20, center=None):
+    """
+    Compute RMS as a function of radius in concentric annuli.
+    
+    Parameters
+    ----------
+    image2d : 2D np.ndarray
+        Square image array.
+    dr : int
+        Annulus thickness in pixels.
+    center : (cx, cy) or None
+        Phase center in pixel coordinates. If None, uses the geometric center.
+    
+    Returns
+    -------
+    radii : np.ndarray
+        Midpoint radii of annuli in pixels.
+    rms : np.ndarray
+        RMS in each annulus.
+    """
+    n = image2d.shape[0]   # since square, nx = ny = n
+    if center is None:
+        cx = cy = (n - 1) / 2.0
+    else:
+        cx, cy = center
+
+    # distance map
+    y, x = np.indices((n, n))
+    r = np.hypot(x - cx, y - cy)
+
+    r_max = n / 2.0
+    edges = np.arange(0, r_max + dr, dr)
+    mids = 0.5 * (edges[:-1] + edges[1:])
+
+    rms_vals = []
+    for r_in, r_out in zip(edges[:-1], edges[1:]):
+        mask = (r >= r_in) & (r < r_out)
+        vals = image2d[mask]
+        if vals.size > 0:
+            rms_vals.append(np.sqrt(np.mean(vals**2)))
+        else:
+            rms_vals.append(np.nan)
+
+    return mids, np.array(rms_vals)
+
+
+def plot_radial_rms(image2d, dr=20, center=None):
+    radii, rms = radial_rms_square(image2d, dr=dr, center=center)
+    plt.figure()
+    plt.plot(radii, rms, "o-")
+    plt.xlabel("Radius (pixels)")
+    plt.ylabel("RMS")
+    plt.title(f"Radial RMS profile (dr={dr} px)")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    return radii, rms
 
 
 def main():
