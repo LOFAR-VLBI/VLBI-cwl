@@ -43,10 +43,16 @@ class ImageData(object):
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
                 self.image_data = hdu[0].data
-                try:
-                    self.Z = self.image_data[0, 0, :, :]
-                except:
-                    self.Z = self.image_data
+                self.header = hdu[0].header
+            try:
+                self.Z = self.image_data[0, 0, :, :]
+            except:
+                self.Z = self.image_data
+    
+            self.pixelscale = self.header["CDELT1"] #in deg
+            self.imagesize = self.header["NAXIS1"]
+            self.RA = self.header["CRVAL1"]
+            self.DEC = self.header["CRVAL2"]
         else:
             sys.stdout.write("Provide fits file\n")
             exit()
