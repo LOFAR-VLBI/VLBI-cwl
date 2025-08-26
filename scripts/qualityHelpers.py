@@ -7,6 +7,7 @@ import pandas as pd
 import csv
 from pprint import pprint
 from glob import glob
+from astropy.modeling import models, fitting
 
 def image_quality(csv_table,cut_DR=10,cut_rms=0.01, cut_peak = 0.01):
     """
@@ -39,6 +40,8 @@ class ImageData(object):
                  noise_method="",
                  load_general_info="",
                 ):
+        self.fits_file = fits_file
+        self.residual_file = residual_file
         if fits_file!="":
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
@@ -48,7 +51,7 @@ class ImageData(object):
                 self.Z = self.image_data[0, 0, :, :]
             except:
                 self.Z = self.image_data
-    
+
             self.pixelscale = abs(self.header["CDELT1"]) #in deg
             self.imagesize = self.header["NAXIS1"]
             self.RA = self.header["CRVAL1"]
@@ -68,7 +71,6 @@ class ImageData(object):
                 maskSup:float = 1e-7,
                 sigma:int = 3.,
                 noise_method:str = "Image RMS",
-                noise:float = 0,
                ):
         """
         Get rms from map
@@ -76,7 +78,11 @@ class ImageData(object):
         Args:
             :maskSup: mask theshold
         """
-        self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method, noise=noise, residual_image=self.residual_Z)
+        if self.residual_file !="":
+            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z)
+        else:
+            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method)
+
 
         return self.rms  # jy/beam
 
@@ -97,8 +103,8 @@ class ImageData(object):
         self.data_dyn_range = get_dyn_range(self.image_data)
 
         return self.data_dyn_range
-    
-    
+
+
 ###########################
 
 def get_peakflux(image):
@@ -141,7 +147,7 @@ def get_dyn_range(image):
     """
     Get the dynamic range.
     """
-    sys.stdout.write("Deriving dunamic range.\n")
+    print("Deriving dunamic range.\n")
     try:
         data_max = image.data_max
     except:
@@ -157,7 +163,6 @@ def get_image_rms(image,
             maskSup:float = 1e-7,
             sigma:int = 3.,
             noise_method:str = "Image RMS",
-            noise:float = 0,
             residual_image = False,
            ):
     """
@@ -166,23 +171,18 @@ def get_image_rms(image,
     Args:
         :maskSup: mask theshold
     """
-    #image = image
     if noise_method == "Histogram Fit":
+        print("Deriving noise using a Histogram Fit.\n")
         try:
             Z1 = image.flatten()
             bin_heights, bin_borders = np.histogram(Z1 - np.min(Z1) + 10 ** (-5), bins="auto")
             bin_widths = np.diff(bin_borders)
             bin_centers = bin_borders[:-1] + bin_widths / 2.
             bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
-
             t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1 - np.min(Z1) + 10 ** (-5)), 0.001)
             fit_t = fitting.LevMarLSQFitter()
             t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
-            noise = t.stddev.value
-
-            # Set contourlevels to mean value + 3 * rms_noise * 2 ** x
-            rms = t.mean.value + np.min(Z1) - 10 ** (-5) + sigma * noise
-
+            rms = t.stddev.value
         except:
             rms=0
 
@@ -194,6 +194,7 @@ def get_image_rms(image,
             :param inp: FITS file
             :param maskSup: mask threshold
         """
+        print("Deriving noise from the image by subtracting emission regions.\n")
         mIn = np.ndarray.flatten(image)
         m = mIn[np.abs(mIn) > maskSup]
         rmsold = np.std(m)
@@ -207,15 +208,22 @@ def get_image_rms(image,
                 break
             rmsold = rms
 
-    elif noise_method == "Residual" or (noise_method=="Histogram Fit" and rms>=0):
+    elif noise_method == "Residual":
+        sys.stdout.write("Residual method for noise used\n")
         try:
             Z1 = residual_image.flatten()
-            noise = np.nanstd(Z1)
-            rms = sigma * noise
+            rms = np.nanstd(Z1)
+           # levs1 = sigma * noise
         except:
             raise Exception("If using Residual-method for rms, please provide the residual_image arg.")
     else:
         raise  Exception("Please define valid noise method ('Histogram Fit','IMage RMS','Residual)")
+    if noise_method=="box" or (noise_method=="Histogram Fit" and rms<=0):
+        if (noise_method=="Histogram Fit" and rms<=0):
+            sys.stdout.write("Could not do Histogram Fit for noise, will use 'box' method\n")
+        rms = 1.8*np.std(image[0:round(len(image)/10),0:round(len(image[0])/10)]) #factor 1.8 from self-cal errors
+        #levs1 = rms*sigma
+
     return rms
 
 def get_val_scores(fits_files,image_id=[],residual_files=[]):
