@@ -5,6 +5,7 @@ dependencies = [
     "astropy",
     "bdsf",
     "python-casacore",
+    "LINC @ git+https://git.astron.nl/RD/LINC",
     "losoto",
     "numpy",
     "pandas",
