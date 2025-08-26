@@ -11,7 +11,6 @@ doc: |
 baseCommand: DP3
 arguments:
   - steps=[filter,clipper,counter]
-  - clipper.sourcedb=/usr/local/share/linc/skymodels/A-Team.skymodel
   - clipper.usechannelfreq=False
   - clipper.operation=replace
   - clipper.beamproximitylimit=2000
@@ -62,6 +61,16 @@ inputs:
     doc: |
         Labels of the skymodel patches to
         use to simulate visibilities.
+
+  - id: skymodel
+    type: File?
+    default:
+      location: /usr/local/share/linc/skymodels/A-Team.skymodel
+      class: File
+    inputBinding:
+      position: 0
+      separate: false
+      prefix: clipper.sourcedb=
 
   - id: usebeammodel
     type: boolean?

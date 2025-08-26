@@ -43,6 +43,13 @@ inputs:
         will be used by AOFlagger (and should be
         available before an AOFlagger job can start).
 
+  - id: strategy
+    doc: The RFI strategy to use in flagging.
+    type: File?
+    default:
+      class: File
+      location: /usr/local/share/linc/rfistrategies/lofar-default.lua
+
 steps:
   - id: get_memory
     in:
@@ -83,6 +90,8 @@ steps:
         source: max_dp3_threads
       - id: aoflagger_memory
         source: get_memory/memory
+      - id: strategy
+        source: strategy
     out:
       - id: msout
       - id: concat_flag_statistics

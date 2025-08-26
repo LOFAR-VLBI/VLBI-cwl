@@ -39,6 +39,10 @@ inputs:
         for an AOFlagger flagging job. Must be set if the concatenated
         data should be flagged.
 
+  - id: strategy
+    doc: The RFI strategy to use if flagging.
+    type: File?
+
 steps:
   - id: filter_ms_group
     in:
@@ -82,7 +86,7 @@ steps:
     out:
       - id: msout
       - id: logfile
-    when: $(inputs.memory != null)
+    when: $((inputs.memory != null) && (inputs.strategy != null))
     run: ../../steps/aoflagger.cwl
     label: AOflagging
 

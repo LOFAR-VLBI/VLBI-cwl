@@ -56,9 +56,18 @@ inputs:
         valueFrom: "$(self/1000)"
       doc: The maximum amount of memory to use in GB. 
 
+    - id: strategy
+      doc: The RFI strategy to use in flagging.
+      type: File?
+      default:
+        class: File
+        location: /usr/local/share/linc/rfistrategies/lofar-default.lua
+      inputBinding:
+        position: 0
+        prefix: aoflagger.strategy=
+
 arguments:
     - steps=[aoflagger]
-    - aoflagger.strategy=/usr/local/share/linc/rfistrategies/lofar-default.lua
     - aoflagger.type=aoflagger
     - msout=.
 

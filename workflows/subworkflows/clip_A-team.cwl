@@ -41,6 +41,13 @@ inputs:
         The patches of sources that should be flagged.
         These should be present in the LINC skymodel.
 
+    - id: skymodel
+      doc: The skymodel to use in clipping bright sources.
+      type: File?
+      default:
+        class: File
+        location: /usr/local/share/linc/skymodels/A-Team.skymodel
+
 steps:
     - id: dp3_prep_target
       label: dp3_prep_target
@@ -70,6 +77,8 @@ steps:
           source: number_cores
         - id: sources
           source: clip_sources
+        - id: skymodel
+          source: skymodel
       out:
         - id: msout
         - id: logfile

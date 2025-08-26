@@ -73,6 +73,13 @@ inputs:
         The patches of sources that should be flagged.
         These should be present in the LINC skymodel.
 
+    - id: skymodel
+      type: File?
+      doc: The skymodel to use in clipping bright sources.
+      default:
+        class: File
+        location: /usr/local/share/linc/skymodels/A-Team.skymodel
+
 requirements:
     - class: SubworkflowFeatureRequirement
     - class: MultipleInputFeatureRequirement
@@ -140,6 +147,8 @@ steps:
         - id: clip_sources
           source: clip_sources
           valueFrom: $(self)
+        - id: skymodel
+          source: skymodel
       out:
         - id: logfiles
         - id: flag_statistics_before

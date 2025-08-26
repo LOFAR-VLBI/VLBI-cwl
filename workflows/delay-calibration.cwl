@@ -38,6 +38,20 @@ inputs:
       type: File
       doc: A delay calibrator catalogue in CSV format.
 
+    - id: skymodel
+      doc: The skymodel to use in clipping bright sources.
+      type: File?
+      default:
+        class: File
+        location: /usr/local/share/linc/skymodels/A-Team.skymodel
+
+    - id: strategy
+      doc: The RFI strategy to use in AOflagging.
+      type: File?
+      default:
+        class: File
+        location: /usr/local/share/linc/rfistrategies/lofar-default.lua
+
     - id: filter_baselines
       type: string?
       default: "*&"
@@ -139,6 +153,8 @@ steps:
           source: phasesol
         - id: number_cores
           source: number_cores
+        - id: skymodel
+          source: skymodel
       out:
         - id: logdir
         - id: msout
@@ -156,6 +172,8 @@ steps:
           source: reference_stationSB
         - id: max_dp3_threads
           source: max_dp3_threads
+        - id: strategy
+          source: strategy
       out:
         - id: logdir
         - id: msout
