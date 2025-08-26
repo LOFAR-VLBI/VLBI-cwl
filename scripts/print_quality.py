@@ -72,7 +72,7 @@ def main():
             w.writeheader()
         w.writerow(row)
 
-    r_pix, rms, n = image.plot_radial_rms(img2d=image.residual_image, dr=20)
+    r_pix, rms, n = image.plot_radial_rms(img2d=image.residual_data, dr=20)
 
 if __name__ == "__main__":
     sys.exit(main())
