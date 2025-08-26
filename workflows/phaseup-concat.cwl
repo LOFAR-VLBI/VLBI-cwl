@@ -45,30 +45,11 @@ inputs:
       Number of cores to use per job for tasks with
       high I/O or memory.
 
-  - id: linc
-    type: Directory
-    doc: |
-      The installation directory for the
-      LOFAR INitial calibration pipeline.
-
   - id: model_image
     type: File?
     doc: Image to generate an initial delay calibrator model from.
 
 steps:
-  - id: collect_linc_libraries
-    label: Collect neccesary LINC libraries
-    in:
-      - id: linc
-        source: linc
-      - id: library
-        default:
-          - scripts/sort_times_into_freqGroups.py
-    out:
-      - id: libraries
-    scatter: library
-    run: ../steps/collect_linc_libraries.cwl
-
   - id: prep_delay
     in:
       - id: delay_calibrator
@@ -110,8 +91,6 @@ steps:
         source: numbands
       - id: firstSB
         source: firstSB
-      - id: linc_libraries
-        source: collect_linc_libraries/libraries
     out:
       - id: filenames
       - id: groupnames

@@ -35,12 +35,6 @@ inputs:
         The maximum number of threads that DP3
         should use per process.
 
-  - id: linc
-    type: Directory
-    doc: |
-        The installation directory for the
-        LOFAR INitial Calibration pipeline.
-
   - id: aoflagger_memory_fraction
     type: int?
     default: 15
@@ -60,20 +54,6 @@ steps:
     run: ../steps/get_memory_fraction.cwl
     label: Get memory fraction
 
-  - id: collect_linc_libraries
-    label: Collect neccesary LINC libraries
-    in:
-      - id: linc
-        source: linc
-      - id: library
-        default:
-          - scripts/sort_times_into_freqGroups.py
-          - rfistrategies/lofar-default.lua
-    out:
-      - id: libraries
-    scatter: library
-    run: ../steps/collect_linc_libraries.cwl
-
   - id: sort_concatenate
     in:
       - id: msin
@@ -82,8 +62,6 @@ steps:
         source: numbands
       - id: firstSB
         source: firstSB
-      - id: linc_libraries
-        source: collect_linc_libraries/libraries
       - id: stepname
         default: '_pre-cal.ms'
     out:
@@ -105,8 +83,6 @@ steps:
         source: max_dp3_threads
       - id: aoflagger_memory
         source: get_memory/memory
-      - id: linc_libraries
-        source: collect_linc_libraries/libraries
     out:
       - id: msout
       - id: concat_flag_statistics

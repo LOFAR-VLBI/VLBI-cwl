@@ -34,13 +34,6 @@ inputs:
         prefix: aoflagger.keepstatistics=True
       doc: Indicates whether statistics should be written to file.
 
-    - id: linc_libraries
-      type: File[]? # This is optional as a workaround for toil, see https://github.com/DataBiosphere/toil/issues/4930
-      doc: |
-        Scripts and reference files from the
-        LOFAR INitial calibration pipeline.
-        Must contain `lofar-default.lua`.
-
     - id: max_dp3_threads
       type: int?
       default: 5
@@ -65,7 +58,7 @@ inputs:
 
 arguments:
     - steps=[aoflagger]
-    - aoflagger.strategy=lofar-default.lua
+    - aoflagger.strategy=/usr/local/share/linc/rfistrategies/lofar-default.lua
     - aoflagger.type=aoflagger
     - msout=.
 
@@ -89,7 +82,6 @@ requirements:
     listing:
       - entry: $(inputs.msin)
         writable: true
-      - entry: $(inputs.linc_libraries)
   - class: ShellCommandRequirement
   - class: InlineJavascriptRequirement
   - class: ResourceRequirement

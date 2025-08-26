@@ -39,13 +39,6 @@ inputs:
         for an AOFlagger flagging job. Must be set if the concatenated
         data should be flagged.
 
-  - id: linc_libraries
-    type: File[]?
-    doc: |
-        Scripts and reference files from the LOFAR INitial Calibration
-        pipeline. Must be set if the concatenated data should be flagged.
-        If set, must contain `lofar-default.lua`.
-
 steps:
   - id: filter_ms_group
     in:
@@ -84,13 +77,12 @@ steps:
       - id: memory
         source: aoflagger_memory
         valueFrom: $(self)
-      - id: linc_libraries
-        source: linc_libraries
-        valueFrom: $(self)
+      - id: strategy
+        source: strategy
     out:
       - id: msout
       - id: logfile
-    when: $((inputs.linc_libraries != null) && (inputs.memory != null))
+    when: $(inputs.memory != null)
     run: ../../steps/aoflagger.cwl
     label: AOflagging
 
@@ -105,11 +97,9 @@ steps:
         default: AOflagging
       - id: memory
         source: aoflagger_memory
-      - id: linc_libraries
-        source: linc_libraries
     out:
       - id: output
-    when: $((inputs.linc_libraries != null) && (inputs.memory != null))
+    when: $(inputs.memory != null)
     run: ../../steps/concatenate_files.cwl
     label: concat_logfiles_AOflagging
   - id: dp3_concatenate_logfiles
