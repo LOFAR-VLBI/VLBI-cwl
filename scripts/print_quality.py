@@ -7,6 +7,72 @@ import numpy as np
 import os
 from pathlib import Path
 
+def get_image_rms(image,
+            maskSup:float = 1e-7,
+            sigma:int = 3.,
+            noise_method:str = "Image RMS",
+            noise:float = 0,
+            residual_image = False,
+           ):
+    """
+    Get rms from map
+
+    Args:
+        :maskSup: mask theshold
+    """
+    image = image
+    if noise_method == "Histogram Fit":
+        try:
+            Z1 = image.flatten()
+            bin_heights, bin_borders = np.histogram(Z1 - np.min(Z1) + 10 ** (-5), bins="auto")
+            bin_widths = np.diff(bin_borders)
+            bin_centers = bin_borders[:-1] + bin_widths / 2.
+            bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
+
+            t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1 - np.min(Z1) + 10 ** (-5)), 0.001)
+            fit_t = fitting.LevMarLSQFitter()
+            t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
+            noise = t.stddev.value
+
+            # Set contourlevels to mean value + 3 * rms_noise * 2 ** x
+            rms = t.mean.value + np.min(Z1) - 10 ** (-5) + sigma * noise
+
+        except:
+            rms=0
+            
+      elif noise_method == "Image RMS":
+            """
+            Get the RMS (code from Cyril Rasse/kMS)
+    
+            :param inp: FITS file
+            :param maskSup: mask threshold
+            """
+            mIn = np.ndarray.flatten(image)
+            m = mIn[np.abs(mIn) > maskSup]
+            rmsold = np.std(m)
+            diff = 1e-1
+            med = np.median(m)
+    
+            for i in range(10):
+                ind = np.where(np.abs(m - med) < rmsold * sigma)[0]
+                rms = np.std(m[ind])
+                print(f"rms = {rms}")
+                if np.abs((rms - rmsold) / rmsold) < diff:
+                    break
+                rmsold = rms
+    
+        elif noise_method == "Residual" or (noise_method=="Histogram Fit" and rms>=0):
+            try:
+                Z1 = residual_image.flatten()
+                noise = np.nanstd(Z1)
+                rms = sigma * noise
+            except:
+                raise Exception("If using Residual-method for rms, please provide the residual_image arg.")
+        else:
+            raise  Exception("Please define valid noise method ('Histogram Fit','IMage RMS','Residual)")
+        return rms
+
+
 class ImageData(object):
     """ Load lofar image and get basic info
     """
