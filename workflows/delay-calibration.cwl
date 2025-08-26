@@ -67,12 +67,6 @@ inputs:
       type: Directory
       doc: External LOFAR helper scripts for merging h5 files.
 
-    - id: linc
-      type: Directory
-      doc: |
-        The installation directory for the
-        LOFAR INitial calibration pipeline.
-
     - id: reference_stationSB
       type: int?
       default: 104
@@ -145,8 +139,6 @@ steps:
           source: phasesol
         - id: number_cores
           source: number_cores
-        - id: linc
-          source: linc
       out:
         - id: logdir
         - id: msout
@@ -164,8 +156,6 @@ steps:
           source: reference_stationSB
         - id: max_dp3_threads
           source: max_dp3_threads
-        - id: linc
-          source: linc
       out:
         - id: logdir
         - id: msout
@@ -219,8 +209,6 @@ steps:
           source: configfile
         - id: selfcal
           source: selfcal
-        - id: linc
-          source: linc
         - id: max_dp3_threads
           source: max_dp3_threads
         - id: model_image
