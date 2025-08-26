@@ -67,8 +67,8 @@ def plot_radial_rms(image2d, pixelscale, center=None, outfile="radial_rms.png"):
     plt.figure()
     plt.plot(radii_arcsec, rms, "o-")
     plt.xlabel("Radius (deg)")
-    plt.ylabel("RMS Jy/Beam")
-    plt.title(f"Radial RMS profile (dr={dr} px)")
+    plt.ylabel("RMS (Jy/Beam)")
+    plt.title(f"Radial RMS profile (dR={np.round(dr*pixelscale*3600)} arcsec)")
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.savefig(outfile, dpi=150)   # save as PNG
