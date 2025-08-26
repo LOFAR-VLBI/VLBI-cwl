@@ -49,7 +49,7 @@ class ImageData(object):
             except:
                 self.Z = self.image_data
     
-            self.pixelscale = self.header["CDELT1"] #in deg
+            self.pixelscale = abs(self.header["CDELT1"]) #in deg
             self.imagesize = self.header["NAXIS1"]
             self.RA = self.header["CRVAL1"]
             self.DEC = self.header["CRVAL2"]

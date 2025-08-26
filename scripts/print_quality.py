@@ -29,10 +29,14 @@ def radial_rms_square(image2d, dr=20, center=None):
         RMS in each annulus.
     """
     n = image2d.shape[0]   # since square, nx = ny = n
+    dr = n/20   # a function can be added todo
+    print(f"image length is {n} pixels")
     if center is None:
         cx = cy = (n - 1) / 2.0
     else:
         cx, cy = center
+    
+    print(f"image center is at ({cx,cy})")
 
     # distance map
     y, x = np.indices((n, n))
@@ -41,6 +45,8 @@ def radial_rms_square(image2d, dr=20, center=None):
     r_max = n / 2.0
     edges = np.arange(0, r_max + dr, dr)
     mids = 0.5 * (edges[:-1] + edges[1:])
+    
+    print(f"mids: {mids}")
 
     rms_vals = []
     for r_in, r_out in zip(edges[:-1], edges[1:]):
@@ -50,19 +56,24 @@ def radial_rms_square(image2d, dr=20, center=None):
             rms_vals.append(np.sqrt(np.mean(vals**2)))
         else:
             rms_vals.append(np.nan)
+    
+    print(f"rms: {np.array(rms_vals)}")
+    return mids, np.array(rms_vals), dr
 
-    return mids, np.array(rms_vals)
 
-
-def plot_radial_rms(image2d, dr=20, center=None):
-    radii, rms = radial_rms_square(image2d, dr=dr, center=center)
+def plot_radial_rms(image2d, pixelscale, center=None, outfile="radial_rms.png"):
+    radii, rms, dr = radial_rms_square(image2d, center=center)
+    radii_arcsec = np.array(radii)*pixelscale
     plt.figure()
-    plt.plot(radii, rms, "o-")
-    plt.xlabel("Radius (pixels)")
-    plt.ylabel("RMS")
+    plt.plot(radii_arcsec, rms, "o-")
+    plt.xlabel("Radius (deg)")
+    plt.ylabel("RMS Jy/Beam")
     plt.title(f"Radial RMS profile (dr={dr} px)")
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
+    plt.savefig(outfile, dpi=150)   # save as PNG
+    plt.close()                     # close to avoid extra plots in notebooks
+    print(f"Saved radial RMS plot as {outfile}")
     return radii, rms
 
 
@@ -129,8 +140,10 @@ def main():
         if write_header:
             w.writeheader()
         w.writerow(row)
+    
+    print(f"redsidual data: {image.residual_Z.shape}")
 
-    r_pix, rms, n = image.plot_radial_rms(img2d=image.residual_data, dr=20)
+    r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
 
 if __name__ == "__main__":
     sys.exit(main())
