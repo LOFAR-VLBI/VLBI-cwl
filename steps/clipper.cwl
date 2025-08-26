@@ -11,7 +11,7 @@ doc: |
 baseCommand: DP3
 arguments:
   - steps=[filter,clipper,counter]
-  - clipper.sourcedb=A-Team.skymodel
+  - clipper.sourcedb=/usr/local/share/linc/skymodels/A-Team.skymodel
   - clipper.usechannelfreq=False
   - clipper.operation=replace
   - clipper.beamproximitylimit=2000
@@ -44,13 +44,6 @@ inputs:
     doc: |
         Data column of the MeasurementSet
         from which input data is read.
-
-  - id: linc_libraries
-    type: File[]
-    doc: |
-        Scripts and reference files from the
-        LOFAR INitial Calibration pipeline.
-        Must contain `A-Team.skymodel`.
 
   - id: sources
     type: string[]?
@@ -103,7 +96,6 @@ requirements:
     listing:
       - entry: $(inputs.msin)
         writable: true
-      - entry: $(inputs.linc_libraries)
   - class: InlineJavascriptRequirement
   - class: ShellCommandRequirement
 

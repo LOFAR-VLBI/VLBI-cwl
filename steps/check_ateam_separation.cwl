@@ -7,9 +7,7 @@ doc: |
     far away from A-team sources. Produces an
     image of the plotted distance.
 
-baseCommand:
-  - python3
-  - check_Ateam_separation.py
+baseCommand: check_Ateam_separation.py
 
 inputs:
   - id: ms
@@ -38,13 +36,6 @@ inputs:
         The minimal accepted distance to an
         A-team source on the sky in degrees.
 
-  - id: linc_libraries
-    type: File[]
-    doc: |
-        Scripts and reference files from the
-        LOFAR INitial Calibration pipeline.
-        Must contain `check_Ateam_separation.py`.
-
 outputs:
   - id: output_image
     doc: The output image containing the plotted distances.
@@ -70,8 +61,5 @@ hints:
   - class: DockerRequirement
     dockerPull: vlbi-cwl
   - class: InlineJavascriptRequirement
-  - class: InitialWorkDirRequirement
-    listing:
-      - entry: $(inputs.linc_libraries)
 
 stdout: Ateam_separation.log

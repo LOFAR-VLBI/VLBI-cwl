@@ -62,12 +62,6 @@ inputs:
         The maximum number of threads DP3
         should use per process.
 
-    - id: linc
-      type: Directory
-      doc: |
-        The installation directory for the
-        LOFAR INitial calibration pipeline.
-
     - id: clip_sources
       type: string[]?
       default:
@@ -101,20 +95,6 @@ steps:
       run: ../steps/check_station_mismatch.cwl
       label: check_station_mismatch
 
-    - id: collect_linc_libraries
-      label: Collect neccesary LINC libraries
-      in:
-        - id: linc
-          source: linc
-        - id: library
-          default:
-            - scripts/check_Ateam_separation.py
-            - skymodels/A-Team.skymodel
-      out:
-        - id: libraries
-      scatter: library
-      run: ../steps/collect_linc_libraries.cwl
-
     - id: check_ateam_separation
       in:
         - id: ms
@@ -122,8 +102,6 @@ steps:
             - msin
         - id: min_separation
           source: min_separation
-        - id: linc_libraries
-          source: collect_linc_libraries/libraries
       out:
         - id: output_image
         - id: output_json
@@ -159,8 +137,6 @@ steps:
           source: number_cores
         - id: max_dp3_threads
           source: max_dp3_threads
-        - id: linc_libraries
-          source: collect_linc_libraries/libraries
         - id: clip_sources
           source: clip_sources
           valueFrom: $(self)
