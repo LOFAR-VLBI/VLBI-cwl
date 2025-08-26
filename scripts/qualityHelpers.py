@@ -97,6 +97,115 @@ class ImageData(object):
         self.data_dyn_range = get_dyn_range(self.image_data)
 
         return self.data_dyn_range
+    
+    def _default_center(self, img2d):
+        """
+        Determine phase center in pixel coordinates (0-based).
+        Uses FITS CRPIX if available (converting from 1-based to 0-based),
+        otherwise image geometric center.
+        """
+        h = getattr(self, "header", {}) or {}
+        cx = h.get("CRPIX1", None)
+        cy = h.get("CRPIX2", None)
+        if cx is not None and cy is not None:
+            # FITS CRPIX is 1-based; convert to 0-based pixel index
+            cx = float(cx) - 1.0
+            cy = float(cy) - 1.0
+        else:
+            # geometric center
+            ny, nx = img2d.shape
+            cx = (nx - 1) / 2.0
+            cy = (ny - 1) / 2.0
+        return (cx, cy)
+
+    def radial_rms(self, img2d=None, dr=20, center=None, r_max=None, nan_policy="omit"):
+        """
+        Compute RMS in concentric annuli [R, R+dr) from the phase center.
+        Parameters
+        ----------
+        img2d : 2D np.ndarray
+            Image to analyze. Defaults to self.residual_image if present, else self.Z.
+        dr : int
+            Annulus thickness in pixels.
+        center : (cx, cy) or None
+            Center in pixel coords (x, y). If None, uses CRPIX (converted) or image center.
+        r_max : float or None
+            Maximum radius in pixels. If None, uses min(image_dim)/2.
+        nan_policy : {"omit", "propagate"}
+            If "omit", ignore NaNs when computing RMS; if "propagate", return NaN when any are present.
+        Returns
+        -------
+        radii : 1D np.ndarray
+            Annulus mid-point radii in pixels.
+        rms : 1D np.ndarray
+            RMS in each annulus.
+        counts : 1D np.ndarray
+            Number of pixels contributing to each annulus.
+        """
+        # pick the image
+        if img2d is None:
+            img2d = getattr(self, "residual_image", None)
+            if img2d is None:
+                img2d = self.Z
+
+        ny, nx = img2d.shape
+        if center is None:
+            cx, cy = self._default_center(img2d)
+        else:
+            cx, cy = center  # (x, y)
+
+        if r_max is None:
+            r_max = min(nx, ny) / 2.0
+
+        # radius map (in pixels)
+        y, x = np.indices((ny, nx))
+        r = np.hypot(x - cx, y - cy)
+
+        # bin edges and midpoints
+        edges = np.arange(0, r_max + dr, dr, dtype=float)
+        mids = 0.5 * (edges[:-1] + edges[1:])
+
+        rms_vals = np.full(mids.shape, np.nan, dtype=float)
+        counts = np.zeros_like(mids, dtype=int)
+
+        for i, (r_in, r_out) in enumerate(zip(edges[:-1], edges[1:])):
+            mask = (r >= r_in) & (r < r_out)
+            vals = img2d[mask]
+            if nan_policy == "omit":
+                vals = vals[np.isfinite(vals)]
+            elif not np.all(np.isfinite(vals)):
+                # propagate NaN/inf
+                rms_vals[i] = np.nan
+                counts[i] = vals.size
+                continue
+
+            counts[i] = vals.size
+            if vals.size > 0:
+                # RMS = sqrt(mean(x^2))
+                rms_vals[i] = np.sqrt(np.mean(vals**2))
+            else:
+                rms_vals[i] = np.nan
+
+        return mids, rms_vals, counts
+
+    def plot_radial_rms(self, img2d=None, dr=20, center=None, r_max=None, nan_policy="omit", show_counts=False):
+        """
+        Convenience wrapper: compute and plot RMS vs radius (pixels).
+        """
+        radii, rms, counts = self.radial_rms(img2d=img2d, dr=dr, center=center, r_max=r_max, nan_policy=nan_policy)
+        plt.figure()
+        plt.plot(radii, rms, marker="o", lw=1)
+        plt.xlabel("Radius (pixels)")
+        plt.ylabel("RMS")
+        plt.title(f"Radial RMS profile (dr={dr} px)")
+        plt.grid(True, alpha=0.3)
+        if show_counts:
+            # annotate a few bins with counts to judge statistics
+            for x, y, n in zip(radii[::max(1, len(radii)//10)], rms[::max(1, len(radii)//10)], counts[::max(1, len(radii)//10)]):
+                if np.isfinite(y):
+                    plt.annotate(f"n={n}", (x, y), textcoords="offset points", xytext=(5,5), fontsize=8)
+        plt.tight_layout()
+        return radii, rms, counts
 ###########################
 
 def get_peakflux(image):
