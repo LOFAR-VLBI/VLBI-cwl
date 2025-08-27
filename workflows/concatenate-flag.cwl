@@ -45,10 +45,7 @@ inputs:
 
   - id: rfi_strategy
     doc: The RFI strategy to use in flagging.
-    type: File?
-    default:
-      class: File
-      location: /usr/local/share/linc/rfistrategies/lofar-default.lua
+    type: File
 
 steps:
   - id: get_memory

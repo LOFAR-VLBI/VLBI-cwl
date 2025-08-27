@@ -63,10 +63,7 @@ inputs:
         use to simulate visibilities.
 
   - id: skymodel
-    type: File?
-    default:
-      location: /usr/local/share/linc/skymodels/A-Team.skymodel
-      class: File
+    type: File
     inputBinding:
       position: 0
       separate: false

@@ -74,11 +74,8 @@ inputs:
         These should be present in the LINC skymodel.
 
     - id: Ateam_skymodel
-      type: File?
+      type: File
       doc: The skymodel to use in clipping bright sources.
-      default:
-        class: File
-        location: /usr/local/share/linc/skymodels/A-Team.skymodel
 
 requirements:
     - class: SubworkflowFeatureRequirement

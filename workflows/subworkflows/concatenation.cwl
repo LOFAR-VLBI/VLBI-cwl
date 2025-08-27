@@ -83,6 +83,7 @@ steps:
         valueFrom: $(self)
       - id: strategy
         source: rfi_strategy
+        valueFrom: $(self)
     out:
       - id: msout
       - id: logfile

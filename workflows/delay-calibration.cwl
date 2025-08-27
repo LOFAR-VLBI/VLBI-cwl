@@ -40,17 +40,11 @@ inputs:
 
     - id: Ateam_skymodel
       doc: The skymodel to use in clipping bright sources.
-      type: File?
-      default:
-        class: File
-        location: /usr/local/share/linc/skymodels/A-Team.skymodel
+      type: File
 
     - id: rfi_strategy
       doc: The RFI strategy to use in AOflagging.
-      type: File?
-      default:
-        class: File
-        location: /usr/local/share/linc/rfistrategies/lofar-default.lua
+      type: File
 
     - id: filter_baselines
       type: string?

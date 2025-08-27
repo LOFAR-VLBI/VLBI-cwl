@@ -43,10 +43,7 @@ inputs:
 
     - id: skymodel
       doc: The skymodel to use in clipping bright sources.
-      type: File?
-      default:
-        class: File
-        location: /usr/local/share/linc/skymodels/A-Team.skymodel
+      type: File
 
 steps:
     - id: dp3_prep_target
