@@ -73,7 +73,7 @@ inputs:
         The patches of sources that should be flagged.
         These should be present in the LINC skymodel.
 
-    - id: skymodel
+    - id: Ateam_skymodel
       type: File?
       doc: The skymodel to use in clipping bright sources.
       default:
@@ -148,7 +148,7 @@ steps:
           source: clip_sources
           valueFrom: $(self)
         - id: skymodel
-          source: skymodel
+          source: Ateam_skymodel
       out:
         - id: logfiles
         - id: flag_statistics_before

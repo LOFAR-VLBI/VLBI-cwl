@@ -43,7 +43,7 @@ inputs:
         will be used by AOFlagger (and should be
         available before an AOFlagger job can start).
 
-  - id: strategy
+  - id: rfi_strategy
     doc: The RFI strategy to use in flagging.
     type: File?
     default:
@@ -90,8 +90,8 @@ steps:
         source: max_dp3_threads
       - id: aoflagger_memory
         source: get_memory/memory
-      - id: strategy
-        source: strategy
+      - id: rfi_strategy
+        source: rfi_strategy
     out:
       - id: msout
       - id: concat_flag_statistics

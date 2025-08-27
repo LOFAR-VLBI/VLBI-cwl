@@ -39,7 +39,7 @@ inputs:
         for an AOFlagger flagging job. Must be set if the concatenated
         data should be flagged.
 
-  - id: strategy
+  - id: rfi_strategy
     doc: The RFI strategy to use if flagging.
     type: File?
 
@@ -82,11 +82,11 @@ steps:
         source: aoflagger_memory
         valueFrom: $(self)
       - id: strategy
-        source: strategy
+        source: rfi_strategy
     out:
       - id: msout
       - id: logfile
-    when: $((inputs.memory != null) && (inputs.strategy != null))
+    when: $(inputs.strategy != null)
     run: ../../steps/aoflagger.cwl
     label: AOflagging
 
@@ -99,11 +99,9 @@ steps:
         pickValue: all_non_null
       - id: file_prefix
         default: AOflagging
-      - id: memory
-        source: aoflagger_memory
     out:
       - id: output
-    when: $(inputs.memory != null)
+    when: $(inputs.file_list != null)
     run: ../../steps/concatenate_files.cwl
     label: concat_logfiles_AOflagging
   - id: dp3_concatenate_logfiles
