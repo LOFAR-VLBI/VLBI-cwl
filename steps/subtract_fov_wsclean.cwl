@@ -4,7 +4,7 @@ id: subtract_with_wsclean
 label: Subtract with WSClean
 doc: This step uses WSClean to subtract visibilities corresponding to model images.
 
-baseCommand: python3
+baseCommand: subtract_with_wsclean
 
 inputs:
   - id: msin
@@ -35,10 +35,6 @@ inputs:
       prefix: "--h5parm_predict"
       position: 4
 
-  - id: lofar_helpers
-    type: Directory
-    doc: LOFAR helpers directory.
-
   - id: copy_to_local_scratch
     type: boolean?
     default: false
@@ -64,10 +60,6 @@ outputs:
     doc: MS subtracted data
     outputBinding:
       glob: subfov_*.ms
-
-
-arguments:
-  - $( inputs.lofar_helpers.path + '/subtract/subtract_with_wsclean.py' )
 
 requirements:
   - class: InlineJavascriptRequirement

@@ -22,9 +22,6 @@ inputs:
       type: float
       default: 2.3
       doc: Phasediff-score for calibrator selection <2.3 good for DD-calibrators and <0.7 good for DI-calibrators.
-    - id: lofar_helpers
-      type: Directory
-      doc: Path to lofar_helpers directory.
     - id: selfcal
       type: Directory
       doc: Path to selfcal directory.
@@ -32,8 +29,6 @@ inputs:
 steps:
     - id: Phasediff
       in:
-        - id: lofar_helpers
-          source: lofar_helpers
         - id: selfcal
           source: selfcal
         - id: msin
@@ -49,8 +44,6 @@ steps:
           - id: msin
             type: Directory
           - id: selfcal
-            type: Directory
-          - id: lofar_helpers
             type: Directory
         outputs:
           - id: phasediff_h5out
@@ -72,8 +65,6 @@ steps:
             in:
               - id: phasediff_ms
                 source: dp3_prep_phasediff/phasediff_ms
-              - id: lofar_helpers
-                source: lofar_helpers
               - id: selfcal
                 source: selfcal
             out:

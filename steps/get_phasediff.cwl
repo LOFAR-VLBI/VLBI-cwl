@@ -13,9 +13,6 @@ inputs:
       doc: Input MeasurementSet
       inputBinding:
         position: 20
-    - id: lofar_helpers
-      type: Directory
-      doc: The lofar_helpers directory.
     - id: selfcal
       type: Directory
       doc: The facetselfcal directory.
@@ -38,7 +35,6 @@ requirements:
     listing:
       - entry: $(inputs.phasediff_ms)
         writable: true
-      - entry: $(inputs.lofar_helpers)
       - entry: $(inputs.selfcal)
 
 arguments:
@@ -59,7 +55,6 @@ arguments:
   - --imsize=1600
   - --skymodelpointsource=1.0
   - --helperscriptspath=$(inputs.selfcal.path)
-  - --helperscriptspathh5merge=$(inputs.lofar_helpers.path)
   - --stopafterskysolve
   - --phasediff_only
 

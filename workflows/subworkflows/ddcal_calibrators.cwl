@@ -16,10 +16,6 @@ inputs:
     type: File?
     doc: CSV with DD selection positions and phasediff scores.
 
-  - id: lofar_helpers
-    type: Directory
-    doc: LOFAR helpers directory
-
   - id: facetselfcal
     type: Directory
     doc: facetselfcal directory
@@ -33,8 +29,6 @@ steps:
           source: dd_dutch_solutions
         - id: phasediff_score_csv
           source: phasediff_score_csv
-        - id: lofar_helpers
-          source: lofar_helpers
         - id: facetselfcal
           source: facetselfcal
       out:

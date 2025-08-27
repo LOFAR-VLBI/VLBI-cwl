@@ -16,10 +16,6 @@ inputs:
     type: File?
     doc: CSV with DD selection positions and phasediff scores.
 
-  - id: lofar_helpers
-    type: Directory
-    doc: lofar_helpers directory
-
   - id: facetselfcal
     type: Directory
     doc: facetselfcal directory
@@ -31,8 +27,6 @@ steps:
           source: dd_dutch_solutions
         - id: ms
           source: msin
-        - id: lofar_helpers
-          source: lofar_helpers
       out:
         - closest_h5
       when: $(inputs.h5parm != null)
@@ -59,8 +53,6 @@ steps:
           source: msin
         - id: h5parm
           source: addCS/addCS_out_h5
-        - id: lofar_helpers
-          source: lofar_helpers
       out:
         - ms_out
       when: $(inputs.h5parm != null)
