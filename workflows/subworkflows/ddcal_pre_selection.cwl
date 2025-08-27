@@ -22,15 +22,10 @@ inputs:
       type: float
       default: 2.3
       doc: Phasediff-score for calibrator selection <2.3 good for DD-calibrators and <0.7 good for DI-calibrators.
-    - id: selfcal
-      type: Directory
-      doc: Path to selfcal directory.
 
 steps:
     - id: Phasediff
       in:
-        - id: selfcal
-          source: selfcal
         - id: msin
           source: msin
       out:
@@ -42,8 +37,6 @@ steps:
         class: Workflow
         inputs:
           - id: msin
-            type: Directory
-          - id: selfcal
             type: Directory
         outputs:
           - id: phasediff_h5out
@@ -65,8 +58,6 @@ steps:
             in:
               - id: phasediff_ms
                 source: dp3_prep_phasediff/phasediff_ms
-              - id: selfcal
-                source: selfcal
             out:
               - phasediff_h5out
             run: ../../steps/get_phasediff.cwl
@@ -77,8 +68,6 @@ steps:
       in:
         - id: phasediff_h5
           source: Phasediff/phasediff_h5out
-        - id: selfcal
-          source: selfcal
       out:
         - phasediff_score_csv
       run: ../../steps/get_selection_scores.cwl

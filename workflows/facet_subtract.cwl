@@ -14,9 +14,6 @@ inputs:
     - id: h5parm
       type: File
       doc: Merged h5parms
-    - id: facetselfcal
-      type: Directory
-      doc: facetselfcal directory.
     - id: copy_to_local_scratch
       type: boolean?
       doc: Specific option for using --bypass-file-store on the Spider cluster to run predict and subtract on local scratch.
@@ -39,8 +36,6 @@ steps:
           valueFrom: $(self[0])
         - id: h5parm
           source: h5parm
-        - id: facetselfcal
-          source: facetselfcal
       out:
         - id: facet_regions
       run: ../steps/get_facet_layout.cwl

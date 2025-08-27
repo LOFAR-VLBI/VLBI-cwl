@@ -6,10 +6,7 @@ doc: |
     Performs direction independent calibration
     of the international antenna array.
 
-baseCommand: python3
-
-arguments:
-  - $(inputs.selfcal.path + "/facetselfcal.py")
+baseCommand: facetselfcal
 
 inputs:
     - id: msin
@@ -37,10 +34,6 @@ inputs:
         prefix: --configpath
         separate: true
       doc: A plain-text file containing configuration options for self-calibration.
-
-    - id: selfcal
-      type: Directory
-      doc: External self-calibration script.
 
     - id: number_cores
       type: int?

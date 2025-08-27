@@ -6,8 +6,7 @@ doc: |
        This step calculates the scores from h5parm solution files to determine if a direction is suitable
        for long-baseline calibration for wide-field imaging (See Section 3.3.1 https://arxiv.org/pdf/2407.13247)
 
-baseCommand:
-  - python3
+baseCommand: phasediff_output
 
 inputs:
     - id: phasediff_h5
@@ -18,9 +17,6 @@ inputs:
         position: 1
         itemSeparator: " "
         separate: true
-    - id: selfcal
-      type: Directory
-      doc: Path to facetselfcal directory.
 
 outputs:
     - id: phasediff_score_csv
@@ -40,10 +36,6 @@ requirements:
     listing:
       - entry: $(inputs.phasediff_h5)
         writable: true
-      - entry: $(inputs.selfcal)
-
-arguments:
-  - $( inputs.selfcal.path + '/submods/source_selection/phasediff_output.py' )
 
 hints:
   - class: DockerRequirement
