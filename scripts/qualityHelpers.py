@@ -8,6 +8,7 @@ import csv
 from pprint import pprint
 from glob import glob
 from astropy.modeling import models, fitting
+import matplotlib.pyplot as plt
 
 def image_quality(csv_table,cut_DR=10,cut_rms=0.01, cut_peak = 0.01):
     """
@@ -71,6 +72,8 @@ class ImageData(object):
                 maskSup:float = 1e-7,
                 sigma:int = 3.,
                 noise_method:str = "Image RMS",
+                use_residual_img = True,
+                plotfile = 'Histogram_fit.png',
                ):
         """
         Get rms from map
@@ -79,9 +82,12 @@ class ImageData(object):
             :maskSup: mask theshold
         """
         if self.residual_file !="":
-            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z)
+            if use_residual_img:
+                self.rms = get_image_rms(self.residual_Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile)
+            else:
+                self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True)
         else:
-            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method)
+            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method,plotfile=plotfile)
 
 
         return self.rms  # jy/beam
@@ -164,6 +170,9 @@ def get_image_rms(image,
             sigma:int = 3.,
             noise_method:str = "Image RMS",
             residual_image = False,
+            plotfile = 'Histofram_fit.png',
+            plot_hist = True,
+            clip = False,
            ):
     """
     Get rms from map
@@ -173,41 +182,54 @@ def get_image_rms(image,
     """
     if noise_method == "Histogram Fit":
         print("Deriving noise using a Histogram Fit.\n")
-        plotname = "histogram_fit.png"
-        try:
-            Z1 = image.flatten()
-            bin_heights, bin_borders = np.histogram(Z1 - np.min(Z1) + 10 ** (-5), bins="auto")
-            bin_widths = np.diff(bin_borders)
-            bin_centers = bin_borders[:-1] + bin_widths / 2.
-            bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
-            t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1 - np.min(Z1) + 10 ** (-5)), 0.001)
-            fit_t = fitting.LevMarLSQFitter()
-            t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
-            rms = t.stddev.value
+       # try:
+        Z1 = image.flatten()
+        #clip = False
+        sigma=10
+        if clip:
+            print("Clipping data to < rms*sigma")
+            m = Z1[np.abs(Z1) > maskSup]
+            rmsold = np.std(m)
+            #print(m)
+            med = np.median(m)
+            ind = np.where(np.abs(m-med) < rmsold*sigma)[0]
+            Z1 = m[ind]
+        Z1_2 = Z1 - np.min(Z1) + 10 ** (-5)
+        bin_heights, bin_borders = np.histogram(Z1_2, bins=300)
+        bin_widths = np.diff(bin_borders)
+        bin_centers = bin_borders[:-1] + bin_widths / 2.
+        bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
+        t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1_2), 0.001)
+        fit_t = fitting.LevMarLSQFitter()
+        t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
+        rms = t.stddev.value
+        print("rms estimated. Now plotting the histogram.\n")
 
-            # Plot
+        # Plot
+        if plot_hist:
             plt.figure(figsize=(8,5))
-            plt.errorbar(bin_centers, bin_heights, yerr=bin_heights_err, fmt='o', label='Histogram')
-            plt.plot(bin_centers, t(bin_centers), 'r-', label='Gaussian Fit')
+            plt.stairs(bin_heights, bin_borders,fill=True)
+            plt.plot(bin_centers, t(bin_centers), 'r-', linewidth=2, label='Gaussian Fit')
             plt.xlabel('Pixel Value')
             plt.ylabel('Count')
             plt.title('Histogram and Gaussian Fit')
             # Fit parameters in box
             param_text = (
                 f"Amplitude: {t.amplitude.value:.1f}\n"
-                f"Mean: {t.mean.value:.2f}\n"
-                f"Stddev: {t.stddev.value:.4f}"
+                f"Mean: {t.mean.value:.4f}\n"
+                f"Stddev: {t.stddev.value:.6f}"
             )
             plt.gca().text(0.95, 0.95, param_text, transform=plt.gca().transAxes,
                            fontsize=10, verticalalignment='top', horizontalalignment='right',
                            bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray'))
-            plt.legend()
+            plt.legend(loc=7)
             plt.tight_layout()
-            plt.savefig(filename, dpi=150)
+            plt.savefig(plotfile, dpi=150)
+            plt.show()
             plt.close()
-            print(f"Saved plot to {filename}")
-        except:
-            rms=0
+            print(f"Saved plot to {plotfile}")
+   #     except:
+    #        rms=0
 
     elif noise_method == "Image RMS":
         """
@@ -225,6 +247,7 @@ def get_image_rms(image,
         med = np.median(m)
 
         for i in range(10):
+            print("Loop {} to derive noise while extracting sources".format(i))
             ind = np.where(np.abs(m - med) < rmsold * sigma)[0]
             rms = np.std(m[ind])
             if np.abs((rms - rmsold) / rmsold) < diff:
@@ -246,7 +269,7 @@ def get_image_rms(image,
             sys.stdout.write("Could not do Histogram Fit for noise, will use 'box' method\n")
         rms = 1.8*np.std(image[0:round(len(image)/10),0:round(len(image[0])/10)]) #factor 1.8 from self-cal errors
         #levs1 = rms*sigma
-
+    print("RMS calculated using method {} with value {}\n".format(noise_method,rms))
     return rms
 
 def get_val_scores(fits_files,image_id=[],residual_files=[]):
@@ -276,8 +299,8 @@ def get_val_scores(fits_files,image_id=[],residual_files=[]):
             except:
                 id = fitsF[i].split('/')[-1].replace('.fits','')
             print(id)
-            rms_res = image.rms(noise_method="Residual")
-            rms= image.rms(noise_method="Image RMS")
+            rms_res = image.get_rms(noise_method="Histogram Fit")
+            rms= image.get_rms(noise_method="Image RMS")
             peak = image.peakflux()
             dyn_range = image.dyn_range() #peak/rms (image)
 
