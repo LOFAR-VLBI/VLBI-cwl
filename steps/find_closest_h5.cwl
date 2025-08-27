@@ -4,8 +4,7 @@ id: find_closest_h5
 label: Find nearest direction from multi-dir h5parm
 doc: Returns a h5parm which corresponds to the nearest direction from a multi-direction h5parm
 
-baseCommand:
-  - python3
+baseCommand: find_closest_h5
 
 inputs:
   - id: ms
@@ -22,10 +21,6 @@ inputs:
       prefix: "--h5_in"
       position: 2
       separate: true
-  - id: lofar_helpers
-    type: Directory
-    doc: lofar helpers directory
-
 
 outputs:
     - id: closest_h5
@@ -39,9 +34,6 @@ outputs:
       outputBinding:
         glob: applycal_dd*.log
 
-
-arguments:
-  - $( inputs.lofar_helpers.path + '/h5_helpers/find_closest_h5.py' )
 
 requirements:
   - class: InlineJavascriptRequirement

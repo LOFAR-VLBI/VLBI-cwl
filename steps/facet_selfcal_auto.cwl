@@ -5,8 +5,7 @@ doc: |
        Performs direction dependent calibration of the international LOFAR
        array on phased-up MeasurementSet.
 
-baseCommand:
-    - python3
+baseCommand: facetselfcal
 
 inputs:
     - id: msin
@@ -38,10 +37,6 @@ inputs:
         prefix: "--facetdirection"
         position: 4
         separate: true
-
-    - id: facetselfcal
-      type: Directory
-      doc: External self-calibration script.
 
 outputs:
     - id: h5_facetselfcal
@@ -82,9 +77,6 @@ requirements:
     listing:
       - entry: $(inputs.msin)
       - entry: $(inputs.configfile)
-
-arguments:
-  - $( inputs.facetselfcal.path + '/facetselfcal.py' )
 
 hints:
   - class: DockerRequirement

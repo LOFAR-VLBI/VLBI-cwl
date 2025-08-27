@@ -41,9 +41,6 @@ inputs:
   - id: chunkhours
     type: float?
     doc: The range of time to predict the model for at once. Lowering this value reduces memory footprint, but can increase runtime.
-  - id: h5merger
-    type: Directory
-    doc: External LOFAR helper scripts for merging h5 files.
   - id: do_subtraction
     type: boolean?
     default: false
@@ -79,8 +76,6 @@ steps:
       - id: ddf_solsdir
         source: solsdir
         valueFrom: $(self)
-      - id: h5merger
-        source: h5merger
     out:
       - id: dis2_h5parm
     run: ../steps/gatherdis2.cwl

@@ -4,8 +4,7 @@ id: remove_flagged_stations
 label: Remove fully flagged stations
 doc: Removes from the MeasurementSet all stations for which all data are flagged.
 
-baseCommand:
-  - python3
+baseCommand: remove_flagged_stations
 
 inputs:
     - id: ms
@@ -13,9 +12,6 @@ inputs:
       doc: MeasurementSet
       inputBinding:
         position: 3
-    - id: lofar_helpers
-      type: Directory
-      doc: LOFAR helpers directory.
 
 outputs:
     - id: cleaned_ms
@@ -37,7 +33,6 @@ requirements:
         writable: false
 
 arguments:
-  - $( inputs.lofar_helpers.path + '/ms_helpers/remove_flagged_stations.py' )
   - --msout
   - $( 'flagged_' + inputs.ms.basename )
 

@@ -14,12 +14,6 @@ inputs:
     - id: h5parm
       type: File
       doc: Merged h5parms
-    - id: lofar_helpers
-      type: Directory
-      doc: LOFAR helpers directory.
-    - id: facetselfcal
-      type: Directory
-      doc: facetselfcal directory.
     - id: copy_to_local_scratch
       type: boolean?
       doc: Specific option for using --bypass-file-store on the Spider cluster to run predict and subtract on local scratch.
@@ -42,8 +36,6 @@ steps:
           valueFrom: $(self[0])
         - id: h5parm
           source: h5parm
-        - id: facetselfcal
-          source: facetselfcal
       out:
         - id: facet_regions
       run: ../steps/get_facet_layout.cwl
@@ -68,8 +60,6 @@ steps:
            source: get_facet_layout/facet_regions
          - id: model_image_folder
            source: get_model_images/filtered_model_image_folder
-         - id: lofar_helpers
-           source: lofar_helpers
          - id: copy_to_local_scratch
            source: copy_to_local_scratch
          - id: ncpu
@@ -86,8 +76,6 @@ steps:
            source: get_facet_layout/facet_regions
          - id: h5parm
            source: h5parm
-         - id: lofar_helpers
-           source: lofar_helpers
       out:
          - id: polygon_info
          - id: polygon_regions
@@ -106,8 +94,6 @@ steps:
            source: split_polygons/polygon_info
          - id: model_image_folder
            source: get_model_images/filtered_model_image_folder
-         - id: lofar_helpers
-           source: lofar_helpers
          - id: copy_to_local_scratch
            source: copy_to_local_scratch
          - id: ncpu
@@ -123,8 +109,6 @@ steps:
       in:
          - id: msin
            source: predict_facet/facet_ms
-         - id: lofar_helpers
-           source: lofar_helpers
          - id: dysco_bitrate
            source: dysco_bitrate
       out:

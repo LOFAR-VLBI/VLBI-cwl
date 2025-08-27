@@ -4,8 +4,7 @@ id: get_phasediff
 label: Polarization Phase Difference
 doc: This step makes scalarphasediff solution files, needed for collecting source selection scores
 
-baseCommand:
-  - python3
+baseCommand: facetselfcal
 
 inputs:
     - id: phasediff_ms
@@ -13,12 +12,6 @@ inputs:
       doc: Input MeasurementSet
       inputBinding:
         position: 20
-    - id: lofar_helpers
-      type: Directory
-      doc: The lofar_helpers directory.
-    - id: selfcal
-      type: Directory
-      doc: The facetselfcal directory.
 
 outputs:
     - id: phasediff_h5out
@@ -38,11 +31,8 @@ requirements:
     listing:
       - entry: $(inputs.phasediff_ms)
         writable: true
-      - entry: $(inputs.lofar_helpers)
-      - entry: $(inputs.selfcal)
 
 arguments:
-  - $(inputs.selfcal.path + '/facetselfcal.py')
   - -i
   - phasediff
   - --forwidefield
@@ -58,8 +48,6 @@ arguments:
   - --soltypecycles-list=[0]
   - --imsize=1600
   - --skymodelpointsource=1.0
-  - --helperscriptspath=$(inputs.selfcal.path)
-  - --helperscriptspathh5merge=$(inputs.lofar_helpers.path)
   - --stopafterskysolve
   - --phasediff_only
 

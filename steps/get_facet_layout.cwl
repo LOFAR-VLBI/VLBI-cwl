@@ -4,7 +4,7 @@ id: get_facet_layout
 label: DS9 Facet Generator
 doc: Generates DS9 facet layout for direction-dependent facet imaging.
 
-baseCommand: python3
+baseCommand: ds9facetgenerator
 
 inputs:
   - id: msin
@@ -45,10 +45,6 @@ inputs:
       prefix: "--DS9regionout"
       position: 6
 
-  - id: facetselfcal
-    type: Directory
-    doc: facetselfcal directory.
-
 outputs:
   - id: facet_regions
     type: File
@@ -61,8 +57,6 @@ outputs:
     outputBinding:
       glob: get_facet_layout*.log
 
-arguments:
-  - $( inputs.facetselfcal.path + '/submods/ds9facetgenerator.py' )
 
 requirements:
   - class: InlineJavascriptRequirement

@@ -16,14 +16,6 @@ inputs:
     type: File?
     doc: CSV with DD selection positions and phasediff scores.
 
-  - id: lofar_helpers
-    type: Directory
-    doc: lofar_helpers directory
-
-  - id: facetselfcal
-    type: Directory
-    doc: facetselfcal directory
-
 steps:
     - id: find_closest_h5
       in:
@@ -31,8 +23,6 @@ steps:
           source: dd_dutch_solutions
         - id: ms
           source: msin
-        - id: lofar_helpers
-          source: lofar_helpers
       out:
         - closest_h5
       when: $(inputs.h5parm != null)
@@ -46,8 +36,6 @@ steps:
           source:
             - find_closest_h5/closest_h5
           pickValue: the_only_non_null
-        - id: facetselfcal
-          source: facetselfcal
       out:
         - addCS_out_h5
       when: $(inputs.h5parm != null)
@@ -59,8 +47,6 @@ steps:
           source: msin
         - id: h5parm
           source: addCS/addCS_out_h5
-        - id: lofar_helpers
-          source: lofar_helpers
       out:
         - ms_out
       when: $(inputs.h5parm != null)
@@ -86,8 +72,6 @@ steps:
             - applycal/ms_out
             - msin
           pickValue: first_non_null
-        - id: facetselfcal
-          source: facetselfcal
         - id: configfile
           source: make_dd_config/dd_config
       out:
@@ -103,8 +87,6 @@ steps:
           source: msin
         - id: h5parm
           source: run_facetselfcal/h5_facetselfcal
-        - id: facetselfcal
-          source: facetselfcal
       out:
         - addCS_out_h5
       run: ../../steps/addCS.cwl
@@ -115,8 +97,6 @@ steps:
           source: addCS/addCS_out_h5
         - id: second_h5
           source: addCS_selfcal/addCS_out_h5
-        - id: facetselfcal
-          source: facetselfcal
       out:
         - merged_h5
       when: $(inputs.first_h5 != null)

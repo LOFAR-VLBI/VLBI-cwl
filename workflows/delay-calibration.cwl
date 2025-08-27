@@ -73,14 +73,6 @@ inputs:
       type: File
       doc: Settings for the delay calibration in delay_solve.
 
-    - id: selfcal
-      type: Directory
-      doc: Path of external calibration scripts.
-
-    - id: h5merger
-      type: Directory
-      doc: External LOFAR helper scripts for merging h5 files.
-
     - id: reference_stationSB
       type: int?
       default: 104
@@ -202,8 +194,6 @@ steps:
           source: number_cores
         - id: chunkhours
           source: subtract_chunk_hours
-        - id: h5merger
-          source: h5merger
         - id: do_subtraction
           source: do_subtraction
       out:
@@ -225,8 +215,6 @@ steps:
           source: delay_calibrator
         - id: configfile
           source: configfile
-        - id: selfcal
-          source: selfcal
         - id: max_dp3_threads
           source: max_dp3_threads
         - id: model_image

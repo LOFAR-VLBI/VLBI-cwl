@@ -5,8 +5,7 @@ doc: |
         Determines the station information from the data and
         adds back the core stations to the h5parm if the data has phased-up core stations.
 
-baseCommand:
-  - python3
+baseCommand: h5_merger
 
 inputs:
   - id: ms
@@ -23,9 +22,6 @@ inputs:
       prefix: "-in"
       position: 3
       separate: true
-  - id: facetselfcal
-    type: Directory
-    doc: facetselfcal directory
 
 outputs:
     - id: addCS_out_h5
@@ -40,7 +36,6 @@ outputs:
         glob: h5_merger_dd*.log
 
 arguments:
-  - $( inputs.facetselfcal.path + '/submods/h5_merger.py' )
   - --h5_out=$( inputs.h5parm.basename + '.addCS.h5' )
   - --add_ms_stations
   - --h5_time_freq=1

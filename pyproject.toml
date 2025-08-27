@@ -6,6 +6,8 @@ dependencies = [
     "bdsf",
     "python-casacore",
     "LINC @ git+https://git.astron.nl/RD/LINC",
+    "lofar_facet_selfcal @ git+https://github.com/rvweeren/lofar_facet_selfcal",
+    "lofar_helpers @ git+https://github.com/jurjen93/lofar_helpers",
     "losoto",
     "numpy",
     "pandas",
