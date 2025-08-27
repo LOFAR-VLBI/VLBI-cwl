@@ -9,8 +9,39 @@ from pprint import pprint
 from glob import glob
 from astropy.modeling import models, fitting
 import matplotlib.pyplot as plt
+from astropy.coordinates import *
+from datetime import timedelta, datetime
+from astropy.time import Time
 
-def image_quality(csv_table,cut_DR=10,cut_rms=0.01, cut_peak = 0.01):
+def calculate_expected_rms(ra,dec,obsdate,observation_time=8):
+    # Define observer's latitude and longitude
+    observer_lat = 52.9088  # latitude of LOFAR
+    observer_lon = 6.8674   # longitude of LOFAR
+
+    obs = {'integration':8}
+    field = {'ra':ra,'dec':dec,'obsdate_start':obsdate}
+    def calculate_elevation(ra,dec, observer_lat, observer_lon, observation_time):
+        location = EarthLocation(lat=observer_lat, lon=observer_lon)
+        sky_coord = SkyCoord(ra=ra, dec=dec, unit='deg')
+        altaz = sky_coord.transform_to(AltAz(obstime=observation_time, location=location))
+        return altaz.alt.deg
+
+    elevations = []
+    for timeoffset in  np.arange(0, obs['integration'], 0.5):
+        obs_datetime = field['obsdate_start'] + timedelta(hours=timeoffset)
+        elevation = calculate_elevation(field['ra'], field['dec'], observer_lat, observer_lon, Time(obs_datetime))
+        elevations.append(elevation)
+    mean_elevation = np.mean(elevations)
+
+    elevation_correction_factor = np.cos(np.radians(90 - mean_elevation))**2.0
+    #flagging_correction_factor = 1 - median_flagged #once we know the glagging factor
+    duration_correction_factor = (np.sum(obs['integration'])/(8.0*231.0)) # Here its assuming an 8hr observation with 231 subbands (48MHz)
+    #corrected_rms = meanrms * elevation_correction_factor * (flagging_correction_factor * duration_correction)
+    correction_factor_rms = elevation_correction_factor * duration_correction_factor #(flagging_correction_factor * duration_correction)
+    return correction_factor_rms
+
+####
+def image_quality(rms, DR, peak, expected_rms, cut_DR=10, cut_rms=3):
     """
     Get image quality acceptance column
 
@@ -19,17 +50,29 @@ def image_quality(csv_table,cut_DR=10,cut_rms=0.01, cut_peak = 0.01):
         :cut_DR: Dynamic range of image
         :cut_rms: RMS of image
     """
-    df = pd.read_csv(csv_table)
-    df['accept_image'] = False
+   # df = pd.read_csv(csv_table)
+   # if expected_rms == False:
+   #     expected_rms = calculate_expected_rms(ra,dec)
+
+    #df['accept_image'] = False
 
     # Filter for bad data
-    mask = ~((df.Dyn_range > cut_DR) |
-             (df.Peak_flux > cut_peak) |
-             (df.RMS < cut_rms))
-    df.loc[mask, 'accept_image'] = True
-    df.to_csv(csv_table, index=False)
-    return csv_table
-
+   # mask = ~((df.Dyn_range > DR_limit) |
+    #         (df.RMS < rms_limit))
+    #df.loc[mask, 'accept_image'] = True
+   # df.to_csv(csv_table, index=False)
+    #return csv_table
+    rms_limit = expected_rms*cut_rms 
+    valid = (rms <= rms_limit) and (DR >= DR_limit)
+    diagnostics = {
+            'rms': rms,
+            'dynamic_range': DR,
+            'peak': peak,
+            'rms_limit': rms_limit,
+            'dynamic_range_limit': DR_limit,
+            'valid': valid,
+            }
+    return valid, diagnostics
 
 class ImageData(object):
     """ Load lofar image and get basic info
@@ -57,6 +100,9 @@ class ImageData(object):
             self.imagesize = self.header["NAXIS1"]
             self.RA = self.header["CRVAL1"]
             self.DEC = self.header["CRVAL2"]
+            self.Date = self.header["DATE-OBS"]
+            self.Date = datetime.strptime(self.Date, '%Y-%m-%dT%H:%M:%S.%f')
+            self.freq = self.header["CRVAL3"]
         else:
             sys.stdout.write("Provide fits file\n")
             exit()
@@ -68,6 +114,8 @@ class ImageData(object):
                     self.residual_Z = self.residual_data[0,0, :, :]
                 except:
                     self.residual_Z = self.residual_data
+        #self.expected_rms = calculate_expected_rms(self.RA,self.DEC,self.Date,observation_time=8)
+        self.expected_rms = 75e-5 #until we have a better expectation/functioning calculation
     def get_rms(self,
                 maskSup:float = 1e-7,
                 sigma:int = 3.,
@@ -110,6 +158,8 @@ class ImageData(object):
 
         return self.data_dyn_range
 
+    def get_quality:
+        valid, diagnostics = image_quality(self.rms, self.data_dyn_range, self.peak_max, self.expected_rms, cut_DR=10, cut_rms=3):
 
 ###########################
 
@@ -121,6 +171,7 @@ def get_peakflux(image):
     """
     sys.stdout.write("Deriving peakflux.\n")
     data_max = image.max()
+    peak_location = np.where(image.max()==data_max)
     return data_max
 ####
 def get_min(image):
