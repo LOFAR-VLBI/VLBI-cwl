@@ -49,11 +49,11 @@ def radial_rms_square(image2d, dr=20, center=None):
     print(f"mids: {mids}")
 
     rms_vals = []
-    for r_in, r_out in zip(edges[:-1], edges[1:]):
+    for r_in, r_out in zip(edges[:-1], edges[1:]):  
         mask = (r >= r_in) & (r < r_out)
         vals = image2d[mask]
         if vals.size > 0:
-            rms_vals.append(np.sqrt(np.mean(vals**2)))
+            rms_vals.append(np.sqrt(np.mean(vals**2))) #todo: change this rmsvalue calculation to call Anne's method instead
         else:
             rms_vals.append(np.nan)
     
