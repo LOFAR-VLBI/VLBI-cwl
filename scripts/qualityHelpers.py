@@ -173,6 +173,7 @@ def get_image_rms(image,
     """
     if noise_method == "Histogram Fit":
         print("Deriving noise using a Histogram Fit.\n")
+        plotname = "histogram_fit.png"
         try:
             Z1 = image.flatten()
             bin_heights, bin_borders = np.histogram(Z1 - np.min(Z1) + 10 ** (-5), bins="auto")
@@ -183,6 +184,28 @@ def get_image_rms(image,
             fit_t = fitting.LevMarLSQFitter()
             t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
             rms = t.stddev.value
+
+            # Plot
+            plt.figure(figsize=(8,5))
+            plt.errorbar(bin_centers, bin_heights, yerr=bin_heights_err, fmt='o', label='Histogram')
+            plt.plot(bin_centers, t(bin_centers), 'r-', label='Gaussian Fit')
+            plt.xlabel('Pixel Value')
+            plt.ylabel('Count')
+            plt.title('Histogram and Gaussian Fit')
+            # Fit parameters in box
+            param_text = (
+                f"Amplitude: {t.amplitude.value:.1f}\n"
+                f"Mean: {t.mean.value:.2f}\n"
+                f"Stddev: {t.stddev.value:.4f}"
+            )
+            plt.gca().text(0.95, 0.95, param_text, transform=plt.gca().transAxes,
+                           fontsize=10, verticalalignment='top', horizontalalignment='right',
+                           bbox=dict(facecolor='white', alpha=0.7, edgecolor='gray'))
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(filename, dpi=150)
+            plt.close()
+            print(f"Saved plot to {filename}")
         except:
             rms=0
 
