@@ -5,7 +5,7 @@ label: Predict with WSClean
 doc: Uses WSClean to predict sources within a facet and adds the predicted visibilities to the input data.
 
 
-baseCommand: python3
+baseCommand: subtract_with_wsclean
 
 inputs:
   - id: subtracted_ms
@@ -35,10 +35,6 @@ inputs:
     inputBinding:
       prefix: "--h5parm_predict"
       position: 4
-
-  - id: lofar_helpers
-    type: Directory
-    doc: LOFAR helpers directory.
 
   - id: polygon_info
     type: File
@@ -72,7 +68,6 @@ outputs:
 
 
 arguments:
-  - $( inputs.lofar_helpers.path + '/subtract/subtract_with_wsclean.py' )
   - --applybeam
   - --applycal
   - --forwidefield

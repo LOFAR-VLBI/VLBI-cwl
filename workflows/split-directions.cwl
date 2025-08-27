@@ -63,9 +63,6 @@ inputs:
       type: File
       default: null
       doc: The configuration file to be used to run facetselfcal.py during the target_selfcal step.
-    - id: h5merger
-      type: Directory
-      doc: The h5merger directory.
     - id: selfcal
       type: Directory
       doc: The selfcal directory.
@@ -134,8 +131,6 @@ steps:
       in:
          - id: msin
            source: flatten_msout/flattenedarray
-         - id: lofar_helpers
-           source: h5merger
       out:
          - id: concat_parsets
       run: ../steps/make_concat_parsets.cwl
@@ -157,8 +152,6 @@ steps:
       in:
         - id: msin
           source: dp3_parset/msout
-        - id: lofar_helpers
-          source: h5merger
         - id: selfcal
           source: selfcal
         - id: dd_selection

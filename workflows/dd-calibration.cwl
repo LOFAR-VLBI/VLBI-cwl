@@ -66,10 +66,6 @@ inputs:
       default: 0.025
       doc: Peak flux (Jy/beam) cut to pre-select sources from catalogue.
 
-    - id: lofar_helpers
-      type: Directory
-      doc: The LOFAR helpers directory.
-
     - id: facetselfcal
       type: Directory
       doc: The facetselfcal directory.
@@ -89,8 +85,6 @@ steps:
           source: max_dp3_threads
         - id: phasediff_score
           source: phasediff_score
-        - id: h5merger
-          source: lofar_helpers
         - id: selfcal
           source: facetselfcal
         - id: peak_flux_cut
@@ -114,8 +108,6 @@ steps:
             - custom_phasediff_score_csv
             - split_directions/phasediff_score_csv
           pickValue: first_non_null
-        - id: lofar_helpers
-          source: lofar_helpers
         - id: facetselfcal
           source: facetselfcal
       out:

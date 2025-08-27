@@ -5,8 +5,7 @@ label: Make concat parsets
 doc: |
     Generate direction concatenation parsets
 
-baseCommand:
-  - python3
+baseCommand: concat_with_dummies
 
 inputs:
   - id: msin
@@ -24,9 +23,6 @@ inputs:
         prefix: "--bitrate"
         position: 2
         separate: true
-  - id: lofar_helpers
-    type: Directory
-    doc: Path to lofar_helpers directory.
 
 outputs:
   - id: concat_parsets
@@ -46,7 +42,6 @@ outputs:
         and stderr from the step.
 
 arguments:
-  - $( inputs.lofar_helpers.path + '/ms_helpers/concat_with_dummies.py' )
   - --make_only_parset
   - --only_basename
 
