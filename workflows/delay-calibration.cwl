@@ -249,7 +249,7 @@ steps:
         - id: h5parm
           source:
             - phaseup/solutions
-        - id: h5merger
+        - id: lofar_helpers
           source: h5merger
       out:
         - id: ms_out
