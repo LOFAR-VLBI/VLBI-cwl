@@ -29,10 +29,6 @@ inputs:
     type: File
     doc: Settings for the delay calibration in delay_solve.
 
-  - id: selfcal
-    type: Directory
-    doc: Path of external calibration scripts.
-
   - id: max_dp3_threads
     type: int?
     default: 5
@@ -202,8 +198,6 @@ steps:
         source: delay_cal_model/skymodel
       - id: configfile
         source: configfile
-      - id: selfcal
-        source: selfcal
       - id: number_cores
         source: number_cores
     out:

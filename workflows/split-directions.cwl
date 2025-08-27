@@ -63,9 +63,6 @@ inputs:
       type: File
       default: null
       doc: The configuration file to be used to run facetselfcal.py during the target_selfcal step.
-    - id: selfcal
-      type: Directory
-      doc: The selfcal directory.
 
 steps:
     - id: select_bright_sources
@@ -152,8 +149,6 @@ steps:
       in:
         - id: msin
           source: dp3_parset/msout
-        - id: selfcal
-          source: selfcal
         - id: dd_selection
           source: dd_selection
         - id: phasediff_score
@@ -174,8 +169,6 @@ steps:
           pickValue: first_non_null
         - id: configfile
           source: configfile
-        - id: selfcal
-          source: selfcal
         - id: do_selfcal
           source: do_selfcal
       out:

@@ -24,12 +24,6 @@ inputs:
       folders with DIS2 solutions.
     inputBinding:
       position: 1
-  - id: h5merger
-    type: Directory
-    doc: Path to external LOFAR helper scripts for merging h5 files.
-    inputBinding:
-      position: 0
-      valueFrom: $(self.path)/h5_merger.py
 
 outputs:
   - id: dis2_h5parm
