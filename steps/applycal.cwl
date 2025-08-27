@@ -11,7 +11,9 @@ inputs:
       type: Directory
       doc: Input MeasurementSet
       inputBinding:
+        prefix: "--msin"
         position: 5
+        separate: true
     - id: h5parm
       type: File?
       doc: Input h5parm to be applied
