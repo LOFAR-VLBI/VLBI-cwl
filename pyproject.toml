@@ -5,6 +5,7 @@ dependencies = [
     "astropy",
     "bdsf",
     "python-casacore",
+    "lofar_helpers @ git+https://github.com/jurjen93/lofar_helpers",
     "losoto",
     "numpy",
     "pandas",
