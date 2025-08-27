@@ -68,6 +68,10 @@ inputs:
       type: Directory
       doc: External LOFAR helper scripts for merging h5 files.
 
+    - id: lofar_helpers
+      type: Directory
+      doc: External directory to lofar_helpers
+
     - id: linc
       type: Directory
       doc: |
