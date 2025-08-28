@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from astropy.coordinates import *
 from datetime import timedelta, datetime
 from astropy.time import Time
+import pyregion
 
 
 
@@ -88,6 +89,7 @@ class ImageData(object):
     def __init__(self,
                  fits_file="",
                  residual_file="",
+                 reg_file="",
                  catalogues=[],
                  noise_method="",
                  load_general_info="",
@@ -95,8 +97,9 @@ class ImageData(object):
                 ):
         self.fits_file = fits_file
         self.residual_file = residual_file
+        self.reg_file= reg_file
         self.rms = False
-        self.facet = False
+        self.facet = None
         if fits_file!="":
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
@@ -172,8 +175,7 @@ class ImageData(object):
             }
 
         self.stats_matrix = image_quality(stats_matrix)
-
-        self.stats_matrix = image_quality(self.stats_matrix)
+        
         return stats_matrix
 
     def get_facet_statistics(self):
@@ -198,6 +200,22 @@ class ImageData(object):
 
             self.facet_stats_matrix = image_quality(self.facet_stats_matrix)
         return self.facet_stats_matrix
+
+    def make_facets_from_reg(save_facets_im=True):
+        shapes = pyregion.open(self.reg_name).as_imagecoord(self.header)
+        facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32)
+        
+        for n, shape in enumerate(shapes):
+            mask = pyregion.ShapeList([shape]).get_mask(shape=(self.imagesize,self.imagesize))
+            facets[mask.astype(bool)] = n
+            print(f"masked for facet number:{n} of {len(shapes)}")
+        
+        self.facets = facets
+        print("facets file created")
+
+        if save_facets_im:
+            plt.imsave(f"{self.id}_facets.png", facets)
+
 #        if facet:
 #            #Load facet image
 #            self.facet = 
