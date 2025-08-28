@@ -208,7 +208,6 @@ class ImageData(object):
         if save_facets_im:
             plt.imsave(f"{self.id}_facets_map.png", facets)
 
-        if save_labeled_png:
             ids = np.unique(facets)
             ids = ids[ids >= 0]  # skip background (-1)
             # draw with a qualitative colormap
