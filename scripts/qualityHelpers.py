@@ -201,8 +201,8 @@ class ImageData(object):
             self.facet_stats_matrix = image_quality(self.facet_stats_matrix)
         return self.facet_stats_matrix
 
-    def make_facets_from_reg(save_facets_im=True):
-        shapes = pyregion.open(self.reg_name).as_imagecoord(self.header)
+    def make_facets_from_reg(self, save_facets_im=True):
+        shapes = pyregion.open(self.reg_file).as_imagecoord(self.header)
         facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32)
         
         for n, shape in enumerate(shapes):

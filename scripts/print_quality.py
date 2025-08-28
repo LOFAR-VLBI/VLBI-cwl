@@ -85,6 +85,7 @@ def main():
     ap.add_argument("image_fits", help="Primary (PB-corrected) image FITS file")
     ap.add_argument("--residual-fits", help="Residual image FITS file (optional, enables 'Residual' RMS)", default=None)
     ap.add_argument("--out-csv", help="name of output csv file")
+    ap.add_argument("--reg_file", help="path to the region file")
     args = ap.parse_args()
     out_csv = args.out_csv
 
@@ -92,7 +93,7 @@ def main():
     kwargs = {"fits_file": args.image_fits}
     if args.residual_fits:
         kwargs["residual_file"] = args.residual_fits
-    
+    kwargs["reg_file"] = args.reg_file 
     print(kwargs)
 
     image = ImageData(**kwargs)
@@ -110,6 +111,8 @@ def main():
 
     #plot rms as a function of distance from phase center. RMS calculated in annular regions
     r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
+    
+    image.make_facets_from_reg()
 
 if __name__ == "__main__":
     sys.exit(main())
