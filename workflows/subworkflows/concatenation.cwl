@@ -34,10 +34,10 @@ inputs:
 
   - id: aoflagger_memory
     type: int?
+    default: -1
     doc: |
         The amount of memory in mebibytes that should be available
-        for an AOFlagger flagging job. Must be set if the concatenated
-        data should be flagged.
+        for an AOFlagger flagging job. Negative values mean no limit.
 
   - id: rfi_strategy
     doc: The RFI strategy to use if flagging.
@@ -80,7 +80,6 @@ steps:
         source: max_dp3_threads
       - id: memory
         source: aoflagger_memory
-        valueFrom: $(self)
       - id: strategy
         source: rfi_strategy
         valueFrom: $(self)
