@@ -30,14 +30,11 @@ def radial_rms_square(image2d, dr=20, center=None):
     """
     n = image2d.shape[0]   # since square, nx = ny = n
     dr = n/20   # a function can be added todo
-    print(f"image length is {n} pixels")
     if center is None:
         cx = cy = (n - 1) / 2.0
     else:
         cx, cy = center
     
-    print(f"image center is at ({cx,cy})")
-
     # distance map
     y, x = np.indices((n, n))
     r = np.hypot(x - cx, y - cy)
@@ -46,8 +43,6 @@ def radial_rms_square(image2d, dr=20, center=None):
     edges = np.arange(0, r_max + dr, dr)
     mids = 0.5 * (edges[:-1] + edges[1:])
     
-    print(f"mids: {mids}")
-
     rms_vals = []
     for r_in, r_out in zip(edges[:-1], edges[1:]):  
         mask = (r >= r_in) & (r < r_out)
@@ -57,7 +52,6 @@ def radial_rms_square(image2d, dr=20, center=None):
         else:
             rms_vals.append(np.nan)
     
-    print(f"rms: {np.array(rms_vals)}")
     return mids, np.array(rms_vals), dr
 
 
@@ -94,7 +88,6 @@ def main():
     if args.residual_fits:
         kwargs["residual_file"] = args.residual_fits
     kwargs["reg_file"] = args.reg_file 
-    print(kwargs)
 
     image = ImageData(**kwargs)
     

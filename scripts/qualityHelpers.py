@@ -198,7 +198,7 @@ class ImageData(object):
         for n, shape in enumerate(shapes):
             mask = pyregion.ShapeList([shape]).get_mask(shape=(self.imagesize,self.imagesize))
             facets[mask.astype(bool)] = n
-            print(f"masked for facet number:{n} of {len(shapes)}")
+            print(f"masked for facet number:{n+1} of {len(shapes)}")
 
         self.facets = facets
         print("facets file created")
