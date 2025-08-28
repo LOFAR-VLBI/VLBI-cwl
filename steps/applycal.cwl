@@ -3,8 +3,7 @@ class: CommandLineTool
 id: applycal
 doc: Applies calibration solutions from h5parm to MeasurementSet.
 
-baseCommand:
-  - python3
+baseCommand: applycal
 
 inputs:
     - id: ms
@@ -21,9 +20,6 @@ inputs:
         prefix: "--h5"
         position: 4
         separate: true
-    - id: lofar_helpers
-      type: Directory
-      doc: lofar helpers directory
 
 outputs:
     - id: ms_out
@@ -45,7 +41,6 @@ requirements:
       - entry: $(inputs.h5parm)
 
 arguments:
-  - $( inputs.lofar_helpers.path + '/ms_helpers/applycal.py' )
   - --msout=$( 'applied_' + inputs.ms.basename )
 
 hints:

@@ -3,8 +3,7 @@ class: CommandLineTool
 id: multidir_h5_merger
 doc: Merges multiple h5parms from containing directions into a single multi-directional h5parm.
 
-baseCommand:
-  - python3
+baseCommand: h5_merger
 
 inputs:
   - id: h5parms
@@ -15,9 +14,6 @@ inputs:
       position: 1
       itemSeparator: " "
       separate: true
-  - id: facetselfcal
-    type: Directory
-    doc: Facetselfcal directory
 
 outputs:
     - id: multidir_h5
@@ -32,7 +28,6 @@ outputs:
         glob: multidir_h5_merger*.log
 
 arguments:
-  - $( inputs.facetselfcal.path + '/submods/h5_merger.py' )
   - --h5_out=merged.h5
 
 requirements:

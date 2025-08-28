@@ -2,9 +2,8 @@
 # Find all the DIS2 solutions from a ddf-pipeline run,
 # convert them to H5parm format and merge them into a
 # single H5parm.
-H5MERGER=${1}
-SOLSDIR=${2}
-MSNAME=${3}
+SOLSDIR=${1}
+MSNAME=${2}
 
 C=0
 for f in ${SOLSDIR}/*pre-cal.ms/*DIS2*.sols.npz; do
@@ -12,4 +11,4 @@ for f in ${SOLSDIR}/*pre-cal.ms/*DIS2*.sols.npz; do
     ((C++))
 done
 
-python3 ${H5MERGER} --h5_tables DIS2*.h5 --h5_out DIS2_full.h5 --propagate_flags --merge_diff_freq --add_ms_stations --ms ${MSNAME} --h5_time_freq True
+h5_merger --h5_tables DIS2*.h5 --h5_out DIS2_full.h5 --propagate_flags --merge_diff_freq --add_ms_stations --ms ${MSNAME} --h5_time_freq True
