@@ -190,7 +190,7 @@ class ImageData(object):
 
     def make_facets_from_reg(self, save_facets_im=True):
         shapes = pyregion.open(self.reg_file).as_imagecoord(self.header)
-        facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32)
+        facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32) - 1
 
         for n, shape in enumerate(shapes):
             mask = pyregion.ShapeList([shape]).get_mask(shape=(self.imagesize,self.imagesize))
@@ -201,7 +201,7 @@ class ImageData(object):
         print("facets file created")
 
         if save_facets_im:
-            plt.imsave(f"{self.id}_facets.png", facets)
+            plt.imsave(f"{self.id}_facets_map.png", facets)
 
 ###########################
 
