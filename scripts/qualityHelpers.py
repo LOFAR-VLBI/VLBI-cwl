@@ -116,7 +116,7 @@ class ImageData(object):
                 except:
                     self.residual_Z = self.residual_data
 
-    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Histogram_fit.png',use_facet = None):
+    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Global_histogram_fit.png',use_facet = None):
         """
         Get rms from map
 
@@ -126,18 +126,20 @@ class ImageData(object):
             :use_residual_img: Set True if residual image should be used for histogram fit, False if total intensity image be used
             :plot_file: plot name for saving the histogram plot
         """
-        if self.residual_file !="":
-            if use_residual_img:
-                print("Using residual image for estimating rms.\n")
-                self.rms = get_image_rms(self.residual_Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,sigma=sigma)
-            else:
-                print("Using image for estimating rms.\n")
-                self.rms = get_image_rms(self.Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True,sigma=sigma)
         if use_facet is not None:
-            self.rms = get_image_rms(use_facet, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
+            print("Calculating Facet rms")
+            return get_image_rms(use_facet, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
+             
+        print("Calculating Image rms.")
+        if use_residual_img:
+            if self.residual_file !="":
+                raise Exception("use_residual_img is true but no residual_image image provided")
+            print("Using residual image for estimating rms.\n")
+            self.rms = get_image_rms(self.residual_Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,sigma=sigma)
         else:
             print("Using image for estimating rms.\n")
-            self.rms = get_image_rms(self.Z, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
+            self.rms = get_image_rms(self.Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True,sigma=sigma)
+            #self.rms = get_image_rms(self.Z, noise_method=noise_method, plotfile=plotfile,clip=True,sigma=sigma)
 
         return self.rms # jy/beam
 
@@ -173,7 +175,7 @@ class ImageData(object):
             facet_px = self.Z[mask]
             if np.count_nonzero(mask) == 0:
                 continue #skip empty facets
-            rms = self.get_rms(use_facet=facet_px)
+            rms = self.get_rms(plotfile=f"{self.id}_facet_{facet_id}_histogram_fit.png", use_facet=facet_px)
             peak = get_peakflux(facet_px)
             dyn_range = get_dyn_range(peak,rms)
 
