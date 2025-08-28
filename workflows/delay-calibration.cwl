@@ -22,6 +22,7 @@ requirements:
   - class: MultipleInputFeatureRequirement
   - class: StepInputExpressionRequirement
   - class: InlineJavascriptRequirement
+  - class: ScatterFeatureRequirement
 
 inputs:
     - id: msin
@@ -121,6 +122,11 @@ inputs:
     - id: model_image
       type: File?
       doc: Image to generate an initial delay calibration model from.
+
+    - id: apply_delay_solutions
+      type: boolean?
+      default: true
+      doc: When set to true, the delay calibration solutions will be applied on the full MS.
 
 steps:
     - id: setup
@@ -257,6 +263,24 @@ steps:
       when: $(inputs.input1 != null || inputs.input2 != null)
       run: ../utils/select_input.cwl
 
+    - id: apply_delay_allms
+      in:
+        - id: ms
+          source:
+            - select_concatenated_mss/output
+            - msin
+          pickValue: first_non_null
+        - id: h5parm
+          source: phaseup/solutions
+        - id: apply_delay_solutions
+          source: apply_delay_solutions
+      out:
+        - id: ms_out
+      run: ../steps/applycal.cwl
+      scatter: ms
+      label: apply_delay_allms
+      when: $(inputs.apply_delay_solutions)
+
 outputs:
   - id: msout
     outputSource: phaseup/msout
@@ -267,12 +291,14 @@ outputs:
 
   - id: msouts
     outputSource:
+      - apply_delay_allms/ms_out
       - select_concatenated_mss/output
-    pickValue: all_non_null
+    pickValue: first_non_null
     type: Directory[]?
     doc: |
         The concatenated data in MeasurementSet format after
-        A-team clipping and optional DDF solutions applied.
+        A-team clipping and optional DDF solutions applied
+        and/or delay solutions applied.
 
   - id: logs
     outputSource: store_logs/dir
