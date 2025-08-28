@@ -38,6 +38,14 @@ inputs:
       type: File
       doc: A delay calibrator catalogue in CSV format.
 
+    - id: Ateam_skymodel
+      doc: The skymodel to use in clipping bright sources.
+      type: File
+
+    - id: rfi_strategy
+      doc: The RFI strategy to use in AOflagging.
+      type: File
+
     - id: filter_baselines
       type: string?
       default: "*&"
@@ -58,12 +66,6 @@ inputs:
     - id: configfile
       type: File
       doc: Settings for the delay calibration in delay_solve.
-
-    - id: linc
-      type: Directory
-      doc: |
-        The installation directory for the
-        LOFAR INitial calibration pipeline.
 
     - id: reference_stationSB
       type: int?
@@ -137,8 +139,8 @@ steps:
           source: phasesol
         - id: number_cores
           source: number_cores
-        - id: linc
-          source: linc
+        - id: Ateam_skymodel
+          source: Ateam_skymodel
       out:
         - id: logdir
         - id: msout
@@ -156,8 +158,8 @@ steps:
           source: reference_stationSB
         - id: max_dp3_threads
           source: max_dp3_threads
-        - id: linc
-          source: linc
+        - id: rfi_strategy
+          source: rfi_strategy
       out:
         - id: logdir
         - id: msout
@@ -207,8 +209,6 @@ steps:
           source: delay_calibrator
         - id: configfile
           source: configfile
-        - id: linc
-          source: linc
         - id: max_dp3_threads
           source: max_dp3_threads
         - id: model_image

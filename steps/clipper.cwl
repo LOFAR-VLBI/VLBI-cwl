@@ -11,7 +11,6 @@ doc: |
 baseCommand: DP3
 arguments:
   - steps=[filter,clipper,counter]
-  - clipper.sourcedb=A-Team.skymodel
   - clipper.usechannelfreq=False
   - clipper.operation=replace
   - clipper.beamproximitylimit=2000
@@ -45,13 +44,6 @@ inputs:
         Data column of the MeasurementSet
         from which input data is read.
 
-  - id: linc_libraries
-    type: File[]
-    doc: |
-        Scripts and reference files from the
-        LOFAR INitial Calibration pipeline.
-        Must contain `A-Team.skymodel`.
-
   - id: sources
     type: string[]?
     default:
@@ -69,6 +61,13 @@ inputs:
     doc: |
         Labels of the skymodel patches to
         use to simulate visibilities.
+
+  - id: skymodel
+    type: File
+    inputBinding:
+      position: 0
+      separate: false
+      prefix: clipper.sourcedb=
 
   - id: usebeammodel
     type: boolean?
@@ -103,7 +102,6 @@ requirements:
     listing:
       - entry: $(inputs.msin)
         writable: true
-      - entry: $(inputs.linc_libraries)
   - class: InlineJavascriptRequirement
   - class: ShellCommandRequirement
 

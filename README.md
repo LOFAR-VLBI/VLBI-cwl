@@ -5,6 +5,16 @@ This is an implementation of the LOFAR-VLBI pipeline in the Common Workflow Lang
 
 Instruction on setting up, configuration and usage of the pipeline can be found in the dedicated [wiki](https://git.astron.nl/RD/VLBI-cwl/-/wikis/home).
 
+## Installing the pipeline
+
+The simplest way to get set up is to install the package in a virtual environment, _e.g._ by running the following from the repository root directory:
+```
+python -m venv venv
+. venv/bin/activate
+pip install .
+```
+
+
 ## Running the test suite
 
 The pipeline comes with a test suite.

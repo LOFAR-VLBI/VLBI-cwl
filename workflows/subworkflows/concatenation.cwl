@@ -34,17 +34,14 @@ inputs:
 
   - id: aoflagger_memory
     type: int?
+    default: -1
     doc: |
         The amount of memory in mebibytes that should be available
-        for an AOFlagger flagging job. Must be set if the concatenated
-        data should be flagged.
+        for an AOFlagger flagging job. Negative values mean no limit.
 
-  - id: linc_libraries
-    type: File[]?
-    doc: |
-        Scripts and reference files from the LOFAR INitial Calibration
-        pipeline. Must be set if the concatenated data should be flagged.
-        If set, must contain `lofar-default.lua`.
+  - id: rfi_strategy
+    doc: The RFI strategy to use if flagging.
+    type: File?
 
 steps:
   - id: filter_ms_group
@@ -83,14 +80,13 @@ steps:
         source: max_dp3_threads
       - id: memory
         source: aoflagger_memory
-        valueFrom: $(self)
-      - id: linc_libraries
-        source: linc_libraries
+      - id: strategy
+        source: rfi_strategy
         valueFrom: $(self)
     out:
       - id: msout
       - id: logfile
-    when: $((inputs.linc_libraries != null) && (inputs.memory != null))
+    when: $(inputs.strategy != null)
     run: ../../steps/aoflagger.cwl
     label: AOflagging
 
@@ -103,13 +99,9 @@ steps:
         pickValue: all_non_null
       - id: file_prefix
         default: AOflagging
-      - id: memory
-        source: aoflagger_memory
-      - id: linc_libraries
-        source: linc_libraries
     out:
       - id: output
-    when: $((inputs.linc_libraries != null) && (inputs.memory != null))
+    when: $(inputs.file_list != null)
     run: ../../steps/concatenate_files.cwl
     label: concat_logfiles_AOflagging
   - id: dp3_concatenate_logfiles
