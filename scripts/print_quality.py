@@ -77,27 +77,8 @@ def plot_radial_rms(image2d, pixelscale, center=None, outfile="radial_rms.png"):
     return radii, rms
 
 ############
-def image_quality(csv_table,cut_DR=10,cut_rms=0.01, cut_peak = 0.01):
-    """
-    Get image quality acceptance column
-
-    Args:
-        csv_table: CSV with image-based scores
-        :cut_DR: Dynamic range of image
-        :cut_rms: RMS of image
-    """
-    df = pd.read_csv(csv_table)
-    df['accept_image'] = False
-
-    # Filter for bad data
-    mask = ~((df.Dyn_range < cut_DR) |
-             (df.Peak_flux < cut_peak) |
-             (df.RMS > cut_rms))
-    df.loc[mask, 'accept_image'] = True
-    df.to_csv(csv_table, index=False)
-    return csv_table
-
 ############
+
 def main():
     ap = argparse.ArgumentParser(
         description="Compute min/max, peak, and RMS (Image RMS / Residual / Histogram Fit) from FITS images." )
@@ -114,6 +95,7 @@ def main():
 
     image = ImageData(**kwargs)
     
+    #First Saving Global Statistics 
     global_statistics = {"Name": "Global"}
     global_statistics.update(image.get_statistics())
 
@@ -124,8 +106,8 @@ def main():
         if write_header:
             w.writeheader()
         w.writerow(global_statistics)
-    
 
+    #plot rms as a function of distance from phase center. RMS calculated in annular regions
     r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
 
 if __name__ == "__main__":
