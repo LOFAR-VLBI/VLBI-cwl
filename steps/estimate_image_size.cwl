@@ -34,9 +34,10 @@ inputs:
       prefix: '--padding'
   - id: filename
     type: string?
-    doc: Output filename to which the image parameters are written. Do not change this.
-    cwl.output.json is a special name for CWL to directly return its contents via the
-    output bindings.
+    doc: |
+      Output filename to which the image parameters are written. Do not change this.
+      cwl.output.json is a special name for CWL to directly return its contents via the
+      output bindings.
     default: 'cwl.output.json'
     inputBinding:
       position: 0
