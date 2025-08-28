@@ -60,18 +60,6 @@ inputs:
       type: File
       doc: Settings for the delay calibration in delay_solve.
 
-    - id: selfcal
-      type: Directory
-      doc: Path of external calibration scripts.
-
-    - id: h5merger
-      type: Directory
-      doc: External LOFAR helper scripts for merging h5 files.
-
-    - id: lofar_helpers
-      type: Directory
-      doc: External directory to lofar_helpers
-
     - id: linc
       type: Directory
       doc: |
