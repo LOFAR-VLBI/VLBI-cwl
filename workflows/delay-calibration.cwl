@@ -135,7 +135,7 @@ inputs:
 
     - id: apply_delay_solutions
       type: boolean?
-      default: false
+      default: true
       doc: When set to true, the delay calibration solutions will be applied on the full MS.
 
 steps:
