@@ -2,7 +2,7 @@ cwlVersion: v1.2
 class: ExpressionTool
 doc: |
   Selects the data from the second input source if it is not null.
-  Selects the data from the first input srouce otherwise.
+  Selects the data from the first input source otherwise.
 
 inputs:
   input1: Any[]?
