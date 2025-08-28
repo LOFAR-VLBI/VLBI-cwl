@@ -161,7 +161,7 @@ class ImageData(object):
                 'peak': self.peak,
                 'dyn_range': self.dyn_range,
             }
-
+        
         self.stats_matrix = image_quality(stats_matrix)
         return stats_matrix
 
@@ -183,7 +183,8 @@ class ImageData(object):
                 'peak': peak,
                 'dyn_range': dyn_range,
             }
-
+            
+            print(f"{facet_id}: stats: {facet_stats_matrix}")
             self.facet_stats_matrix.append(image_quality(facet_stats_matrix))
         return self.facet_stats_matrix
 
