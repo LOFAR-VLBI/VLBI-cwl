@@ -21,7 +21,7 @@ def calculate_expected_rms(ra,dec,obsdate,observation_time=8):
     observer_lat = 52.9088  # latitude of LOFAR
     observer_lon = 6.8674   # longitude of LOFAR
 
-    obs = {'integration':8}
+    obs = {'integration':8,'num_subbands':231.0}
     field = {'ra':ra,'dec':dec,'obsdate_start':obsdate}
     def calculate_elevation(ra,dec, observer_lat, observer_lon, observation_time):
         location = EarthLocation(lat=observer_lat, lon=observer_lon)
@@ -38,7 +38,7 @@ def calculate_expected_rms(ra,dec,obsdate,observation_time=8):
 
     elevation_correction_factor = np.cos(np.radians(90 - mean_elevation))**2.0
     #flagging_correction_factor = 1 - median_flagged #once we know the glagging factor
-    duration_correction_factor = (np.sum(obs['integration'])/(8.0*231.0)) # Here its assuming an 8hr observation with 231 subbands (48MHz)
+    duration_correction_factor = (obs['integration']*obs['num_subbands'])/(8.0*231.0) # Here its assuming an 8hr observation with 231 subbands (48MHz)
     #corrected_rms = meanrms * elevation_correction_factor * (flagging_correction_factor * duration_correction)
     correction_factor_rms = elevation_correction_factor * duration_correction_factor #(flagging_correction_factor * duration_correction)
     return correction_factor_rms
@@ -53,19 +53,6 @@ def image_quality(stats_matrix, expected_rms=75e-5, cut_peak=0.1, cut_rms=3):
         :cut_peak: Peak of image
         :cut_rms: RMS of image
     """
-   # df = pd.read_csv(csv_table)
-   # if expected_rms == False:
-   #     expected_rms = calculate_expected_rms(ra,dec)
-
-    #df['accept_image'] = False
-
-    # Filter for bad data
-   # mask = ~((df.Dyn_range > DR_limit) |
-    #         (df.RMS < rms_limit))
-    #df.loc[mask, 'accept_image'] = True
-   # df.to_csv(csv_table, index=False)
-    #return csv_table
-
     rms = stats_matrix["rms"]
     peak = stats_matrix["peak"]
     # Add this functions once we have useful values to input to calculate_expected_rms
@@ -93,13 +80,12 @@ class ImageData(object):
                  catalogues=[],
                  noise_method="",
                  load_general_info="",
-                 facet = None,
                 ):
         self.fits_file = fits_file
         self.residual_file = residual_file
         self.reg_file= reg_file
-        self.rms = False
-        self.facet = None
+        self.rms = None
+        self.facets = None
         if fits_file!="":
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
@@ -110,7 +96,7 @@ class ImageData(object):
             except:
                 self.Z = self.image_data
 
-            self.id = fits_file.split('.')[0]
+            self.id = fits_file.split('/')[-1].split('.')[0]
             self.pixelscale = abs(self.header["CDELT1"]) #in deg
             self.imagesize = self.header["NAXIS1"]
             self.RA = self.header["CRVAL1"]
@@ -130,7 +116,7 @@ class ImageData(object):
                 except:
                     self.residual_Z = self.residual_data
 
-    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Histogram_fit.png'):
+    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Histogram_fit.png',use_facet = False):
         """
         Get rms from map
 
@@ -147,6 +133,8 @@ class ImageData(object):
             else:
                 print("Using image for estimating rms.\n")
                 self.rms = get_image_rms(self.Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True,sigma=sigma)
+        if use_facet:
+            self.rms = get_image_rms(use_facet, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
         else:
             print("Using image for estimating rms.\n")
             self.rms = get_image_rms(self.Z, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
@@ -175,82 +163,44 @@ class ImageData(object):
             }
 
         self.stats_matrix = image_quality(stats_matrix)
-        
         return stats_matrix
 
     def get_facet_statistics(self):
-        facet_ids = np.unique(self.facet)
+        facet_ids = np.unique(self.facets)
         self.facet_stats_matrix = []
         for facet_id in facet_ids:
             mask = (self.facet == facet_id)
             facet_px = self.Z[mask]
             if np.count_nonzero(mask) == 0:
                 continue #skip empty facets
-            rms = get_image_rms(facet_pixels,noise_method="Histogram Fit",clip=True)
-            peak = get_peakflux(facet_pixels)
+            rms = get_image_rms(use_facet=facet_px)
+            peak = get_peakflux(facet_px)
             dyn_range = get_dyn_range(peak,rms)
 
-            self.facet_stats_matrix.append({
+            facet_stats_matrix={
                 'facet': facet_id,
                 'rms': rms,
                 'peak': peak,
                 'dyn_range': dyn_range,
-                'valid': validity,
-            })
+            }
 
-            self.facet_stats_matrix = image_quality(self.facet_stats_matrix)
+            self.facet_stats_matrix.append(image_quality(facet_stats_matrix))
         return self.facet_stats_matrix
 
     def make_facets_from_reg(self, save_facets_im=True):
         shapes = pyregion.open(self.reg_file).as_imagecoord(self.header)
         facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32)
-        
+
         for n, shape in enumerate(shapes):
             mask = pyregion.ShapeList([shape]).get_mask(shape=(self.imagesize,self.imagesize))
             facets[mask.astype(bool)] = n
             print(f"masked for facet number:{n} of {len(shapes)}")
-        
+
         self.facets = facets
         print("facets file created")
 
         if save_facets_im:
             plt.imsave(f"{self.id}_facets.png", facets)
-
-#        if facet:
-#            #Load facet image
-#            self.facet = 
-#
-#
-#    def get_facet(self,facet_n=1):
-#        mask = (self.facet == facet_n)
-#        image_facet  = self.image_data[mask]
-#n_facets = 20
-#stats_matrix = []
-#
-#for facet_id in range(1, n_facets+1):
-#    mask = (facets_mask == facet_id)
-#    facet_pixels = Img[mask]
-#    if np.count_nonzero(mask) == 0:
-#        continue  # skip empty facets
-#
-#    rms = get_image_rms(facet_pixels, noise_method="Histogram Fit")
-#    peak = get_peakflux(facet_pixels)
-#    dyn_range = get_dyn_range(peak, rms)
-#    validity = dyn_range > DR_limit and rms < rms_limit  # or use your image_quality function
-#
-#    stats_matrix.append({
-#        'facet': facet_id,
-#        'rms': rms,
-#        'peak': peak,
-#        'dyn_range': dyn_range,
-#        'valid': validity,
-#    })
-
-# Convert to DataFrame for easy analysis
-#import pandas as pd
-#df_stats = pd.DataFrame(stats_matrix)
-#print(df_stats)
-
 
 ###########################
 
