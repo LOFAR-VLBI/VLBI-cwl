@@ -113,6 +113,7 @@ def main():
     r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
     
     image.make_facets_from_reg()
+    image.get_facet_statistics()
 
 if __name__ == "__main__":
     sys.exit(main())

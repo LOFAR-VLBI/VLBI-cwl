@@ -116,7 +116,7 @@ class ImageData(object):
                 except:
                     self.residual_Z = self.residual_data
 
-    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Histogram_fit.png',use_facet = False):
+    def get_rms(self,sigma=10.,noise_method= "Histogram Fit", use_residual_img = False, plotfile='Histogram_fit.png',use_facet = None):
         """
         Get rms from map
 
@@ -133,7 +133,7 @@ class ImageData(object):
             else:
                 print("Using image for estimating rms.\n")
                 self.rms = get_image_rms(self.Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True,sigma=sigma)
-        if use_facet:
+        if use_facet is not None:
             self.rms = get_image_rms(use_facet, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
         else:
             print("Using image for estimating rms.\n")
@@ -169,11 +169,11 @@ class ImageData(object):
         facet_ids = np.unique(self.facets)
         self.facet_stats_matrix = []
         for facet_id in facet_ids:
-            mask = (self.facet == facet_id)
+            mask = (self.facets == facet_id)
             facet_px = self.Z[mask]
             if np.count_nonzero(mask) == 0:
                 continue #skip empty facets
-            rms = get_image_rms(use_facet=facet_px)
+            rms = self.get_rms(use_facet=facet_px)
             peak = get_peakflux(facet_px)
             dyn_range = get_dyn_range(peak,rms)
 
