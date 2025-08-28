@@ -30,7 +30,7 @@ inputs:
       position: 4
 
   - id: pixelscale
-    type: float
+    type: float?
     doc: Pixel scale in arcseconds per pixel.
     default: 0.4
     inputBinding:
