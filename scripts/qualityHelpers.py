@@ -64,6 +64,7 @@ def image_quality(rms, DR, peak, expected_rms, cut_DR=10, cut_rms=3):
     #return csv_table
     rms_limit = expected_rms*cut_rms
     DR_limit = cut_DR
+    valid = False
     valid = (rms <= rms_limit) and (DR >= DR_limit)
     diagnostics = {
             'rms': rms,
@@ -73,7 +74,8 @@ def image_quality(rms, DR, peak, expected_rms, cut_DR=10, cut_rms=3):
             'dynamic_range_limit': DR_limit,
             'valid': valid,
             }
-    return valid, diagnostics
+    print(diagnostics)
+    return diagnostics
 
 class ImageData(object):
     """ Load lofar image and get basic info
@@ -87,7 +89,7 @@ class ImageData(object):
                 ):
         self.fits_file = fits_file
         self.residual_file = residual_file
-        self.rms = None,
+        self.rms = False
         if fits_file!="":
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
@@ -143,13 +145,13 @@ class ImageData(object):
         #self.expected_rms = calculate_expected_rms(self.RA,self.DEC,self.Date,observation_time=8)
         self.expected_rms = 75e-5 #until we have a better expectation/functioning calculation
 
-        return self.rms  # jy/beam
+        return self.rms,self.expected_rms  # jy/beam
 
     def get_statistics(self):
         self.peak = get_peakflux(self.image_data)
         self.min = get_min(self.image_data)
-        self.minmax = get_minmax(self.image_data)
-        if self.rms != None:
+        self.minmax = get_minmax(self.min,self.peak)
+        if self.rms:
             self.dyn_range = get_dyn_range(self.peak,self.rms)
         else:
             self.rms = self.get_rms(self)
@@ -159,7 +161,8 @@ class ImageData(object):
         return self.peak,self.min,self.minmax,self.dyn_range
 
     def get_quality(self):
-        valid, diagnostics = image_quality(self.rms, self.dyn_range, self.peak, self.expected_rms, cut_DR=10, cut_rms=3)
+        diagnostics = image_quality(self.rms, self.dyn_range, self.peak, self.expected_rms, cut_DR=10, cut_rms=3)
+        return diagnostics
 
 ###########################
 
@@ -184,19 +187,11 @@ def get_min(image):
     data_min = image.min()
     return data_min
 ####
-def get_minmax(image):
+def get_minmax(data_min,data_max):
     """
     Get min/max
     """
     sys.stdout.write("Deriving minmax.\n")
-    try:
-        data_min = image.data_min
-    except:
-        data_min = get_min(image)
-    try:
-        data_max = image.data_max
-    except:
-        data_max = get_peakflux(image)
     data_minmax = np.abs(data_min/data_max)
     return data_minmax
 ####
@@ -265,8 +260,8 @@ def get_image_rms(image,
             plt.legend(loc=7)
             plt.tight_layout()
             plt.savefig(plotfile, dpi=150)
-            plt.show()
-           # plt.close()
+           # plt.show()
+            plt.close()
             print(f"Saved plot to {plotfile}")
 
     elif noise_method == "Image RMS":
