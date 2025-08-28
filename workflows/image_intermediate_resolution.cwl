@@ -87,27 +87,64 @@ steps:
               "soltabs": ["amplitude000", "phase000"]
             })
       out:
-        - id: MFS_images
+        - id: MFS_image_pb
+        - id: MFS_image
+        - id: MFS_residual_pb
+        - id: MFS_residual
+        - id: MFS_model_pb
+        - id: MFS_model
+        - id: MFS_psf
         - id: channel_model_images
 
       run: ../steps/wsclean.cwl
 
 outputs:
     - id: facet_region
-      outputSource:
-        - make_facet_layout/facet_regions
+      outputSource: make_facet_layout/facet_regions
       type: File
       doc: |
         DS9 region file containing the facet layout.
-    - id: MFS_images
-      outputSource:
-        - make_intermediate_resolution_image/MFS_images
-      type: File[]
+
+    - id: MFS_image_pb
+      outputSource: make_intermediate_resolution_image/MFS_image_pb
+      type: File
       doc: |
-        Final MFS FITS images at intermediate resolution.
+        Final primary-beam corrected MFS FITS image at intermediate resolution.
+    - id: MFS_image
+      outputSource: make_intermediate_resolution_image/MFS_image_pb
+      type: File
+      doc: |
+        Final apparent corrected MFS FITS image at intermediate resolution.
+
+    - id: MFS_residual_pb
+      outputSource: make_intermediate_resolution_image/MFS_residual_pb
+      type: File
+      doc: |
+        Final primary-beam corrected MFS FITS image at intermediate resolution.
+    - id: MFS_residual
+      outputSource: make_intermediate_resolution_image/MFS_residual_pb
+      type: File
+      doc: |
+        Final apparent corrected MFS FITS image at intermediate resolution.
+
+    - id: MFS_model_pb
+      outputSource: make_intermediate_resolution_image/MFS_model_pb
+      type: File
+      doc: |
+        Final primary-beam corrected MFS FITS image at intermediate resolution.
+    - id: MFS_model
+      outputSource: make_intermediate_resolution_image/MFS_model_pb
+      type: File
+      doc: |
+        Final apparent corrected MFS FITS image at intermediate resolution.
+
+    - id: MFS_psf
+      outputSource: make_intermediate_resolution_image/MFS_psf
+      type: File
+      doc: |
+        Final MFS psf FITS image at intermediate resolution.
     - id: channel_model_images
-      outputSource:
-      - make_intermediate_resolution_image/channel_model_images
+      outputSource: make_intermediate_resolution_image/channel_model_images
       type: File[]
       doc: |
         Final channel model FITS images of the intermediate resolution image.

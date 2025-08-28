@@ -1,17 +1,29 @@
 class: CommandLineTool
 cwlVersion: v1.2
 id: wsclean
+label: WSClean
+doc: Runs WSClean on the input data to produce an image.
+
 baseCommand: wsclean
 arguments: [-verbose, -log-time, -no-update-model-required]
 
-
 inputs:
   - id: msin
-    type: Directory[]
+    type:
+      - Directory
+      - Directory[]
     inputBinding:
       position: 2
       shellQuote: false
       itemSeparator: ' '
+  - id: tempdir
+    type: string
+    default: '.'
+    inputBinding:
+      position: 1
+      shellQuote: false
+      itemSeparator: ' '
+      prefix: '-temp-dir'
   - id: cores
     type: int?
     default: 24
@@ -26,6 +38,13 @@ inputs:
       position: 1
       shellQuote: false
       prefix: '-size'
+  - id: baseline_averaging
+    type: float?
+    default: 0.0
+    inputBinding:
+      position: 1
+      shellQuote: false
+      prefix: '-baseline-averaging'
   - id: minuv-l
     type: float?
     default: 80.0
@@ -36,7 +55,6 @@ inputs:
   - id: weight
     type:
       - string?
-      - float?
     default: briggs -1.5
     inputBinding:
       position: 1
@@ -86,7 +104,7 @@ inputs:
       prefix: '-pol'
   - id: name
     type: string?
-    default: "field_intermediate_resolution"
+    default: "image"
     inputBinding:
       position: 1
       shellQuote: false
@@ -228,26 +246,58 @@ inputs:
       soltabs: null
 
 outputs:
-  - id: MFS_images
-    type: File[]
-    doc: The final MFS images created by WSClean.
+  - id: MFS_image_pb
+    type: File
+    doc: The final primary beam corrected image.
     outputBinding:
-      glob: 'field_intermediate_resolution-MFS*.fits'
+      glob: '$(inputs.name)-MFS-image-pb.fits'
+  - id: MFS_image
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-image.fits'
+  - id: MFS_residual_pb
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-residual-pb.fits'
+  - id: MFS_residual
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-residual.fits'
+  - id: MFS_model_pb
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-model-pb.fits'
+  - id: MFS_model
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-model.fits'
+  - id: MFS_psf
+    type: File
+    doc: The final primary beam corrected image.
+    outputBinding:
+      glob: '$(inputs.name)-MFS-psf.fits'
   - id: channel_model_images
     type: File[]
     doc: Per-channel model images required for the facet subtraction.
     outputBinding:
-      glob: 'field_intermediate_resolution-????-model*.fits'
+      glob: '$(inputs.name)-????-model*.fits'
 
-label: WSClean
 hints:
   - class: DockerRequirement
     dockerPull: vlbi-cwl
+
 requirements:
+  - class: ShellCommandRequirement
   - class: InitialWorkDirRequirement
     listing:
       - entry: $(inputs.msin)
   - class: ResourceRequirement
     coresMin: $(inputs.cores)
+
 stdout: wsclean.log
 stderr: wsclean_err.log
