@@ -113,56 +113,18 @@ def main():
         kwargs["residual_file"] = args.residual_fits
 
     image = ImageData(**kwargs)
-
-    # Min/Max and Peak
-    peak_flux  = image.peakflux()
-
-    # RMS computations
-    rms_image = image.get_rms(noise_method="Image RMS")
-
-    rms_res = None
-    if args.residual_fits:
-        rms_res = image.get_rms(noise_method="Residual")
     
-    # Print results
-    print(f"\n== Global Quality Metrics for: {args.image_fits} ==")
-    print(f"Peak flux: {peak_flux}")
+    global_statistics = {"Name": "Global"}
+    global_statistics.update(image.get_statistics())
 
-    print("\nRMS estimates:")
-    print(f"  Image RMS:       {rms_image}")
-    if args.residual_fits:
-        print(f"  Residual RMS:    {rms_res}")
-    else:
-        print("  Residual RMS:    (skipped; no --residual-fits provided)")
-
-    # Dynamic ranges
-    print("\nDynamic range (Peak / RMS):")
-    print(f"  DR (Image RMS):  {peak_flux/rms_image}")
-    if args.residual_fits:
-        print(f"  DR (Residual):   {peak_flux/rms_res}")
-
-    dr_valueImage = (peak_flux / rms_image) if (rms_image and np.isfinite(rms_image)) else float("nan")
-    dr_valueResidual = (peak_flux / rms_res) if (rms_res and np.isfinite(rms_res)) else float("nan")
-    name="Global"
-
-    row = {
-        "Name": name,
-        "Peak": peak_flux,
-        "RMS_Image": rms_image,
-        "RMS_residual": (rms_res if rms_res is not None else ""),
-        "DR_Image": dr_valueImage,
-        "DR_Residul": dr_valueResidual
-    }
-    
-    header = ["Name", "Peak", "RMS_Image", "RMS_residual", "DR_Image", "DR_Residul"]
+    header = global_statistics.keys()
     write_header = not Path(out_csv).exists()
     with open(out_csv, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=header)
         if write_header:
             w.writeheader()
-        w.writerow(row)
+        w.writerow(global_statistics)
     
-    print(f"redsidual data: {image.residual_Z.shape}")
 
     r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
 

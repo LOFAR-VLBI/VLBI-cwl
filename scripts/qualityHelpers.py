@@ -158,7 +158,7 @@ class ImageData(object):
             self.dyn_range = get_dyn_range(self.peak,self.rms)
 
         print("Statistics derived:\nPeak={}\nMin={}\nMinMax={}\nDyn_range={}\n".format(self.peak,self.min,self.minmax,self.dyn_range))
-        return self.peak,self.min,self.minmax,self.dyn_range
+        return {"peak":self.peak,"min":self.min,"minmax":self.minmax,"DR":self.dyn_range, "RMS":self.rms}
 
     def get_quality(self):
         diagnostics = image_quality(self.rms, self.dyn_range, self.peak, self.expected_rms, cut_DR=10, cut_rms=3)
