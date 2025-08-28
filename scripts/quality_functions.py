@@ -160,8 +160,8 @@ def smearing_corrected_sourcesizes(highrescat,highresimagerms,fitsmearing,verbos
 
     Returns
     -------
-    median_tc : float
-        Median of the total-to-peak flux ratio for the corrected catalogue.
+    mode_tc : float
+        Mode of the total-to-peak flux ratio for the corrected catalogue.
     std_tc : float
         Standard deviation of the total-to-peak flux ratio for the corrected catalogue.
     """
@@ -352,7 +352,7 @@ def smearing_corrected_sourcesizes(highrescat,highresimagerms,fitsmearing,verbos
     pdf_tc = pdf_tc * area_tc / np.trapz(pdf_tc, xfit)
     plt.plot(xfit, pdf_tc, color='red', linestyle='solid', linewidth=2, label='Total/Peak (corr) fit')
 
-    legend_entries.append(f'Total/Peak (corr): median={median_tc:.2f}, std={std_tc:.2f}')
+    legend_entries.append(f'Total/Peak (corr): mode={mode_tc:.2f}, std={std_tc:.2f}')
 
     plt.xscale('log')
     plt.xlabel('Total Flux / Peak Flux (log scale)')
