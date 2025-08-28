@@ -62,7 +62,8 @@ def image_quality(rms, DR, peak, expected_rms, cut_DR=10, cut_rms=3):
     #df.loc[mask, 'accept_image'] = True
    # df.to_csv(csv_table, index=False)
     #return csv_table
-    rms_limit = expected_rms*cut_rms 
+    rms_limit = expected_rms*cut_rms
+    DR_limit = cut_DR
     valid = (rms <= rms_limit) and (DR >= DR_limit)
     diagnostics = {
             'rms': rms,
@@ -86,6 +87,7 @@ class ImageData(object):
                 ):
         self.fits_file = fits_file
         self.residual_file = residual_file
+        self.rms = None,
         if fits_file!="":
             with fits.open(fits_file) as hdu:
                 self.hdu_list = hdu
@@ -114,12 +116,10 @@ class ImageData(object):
                     self.residual_Z = self.residual_data[0,0, :, :]
                 except:
                     self.residual_Z = self.residual_data
-        #self.expected_rms = calculate_expected_rms(self.RA,self.DEC,self.Date,observation_time=8)
-        self.expected_rms = 75e-5 #until we have a better expectation/functioning calculation
     def get_rms(self,
                 maskSup:float = 1e-7,
                 sigma:int = 3.,
-                noise_method:str = "Image RMS",
+                noise_method:str = "Histogram Fit",
                 use_residual_img = True,
                 plotfile = 'Histogram_fit.png',
                ):
@@ -131,35 +131,35 @@ class ImageData(object):
         """
         if self.residual_file !="":
             if use_residual_img:
+                print("Using residual image for estimating rms.\n")
                 self.rms = get_image_rms(self.residual_Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile)
             else:
+                print("Using image for estimating rms.\n")
                 self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,clip=True)
         else:
-            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method,plotfile=plotfile)
+            print("Using image for estimating rms.\n")
+            self.rms = get_image_rms(self.Z, maskSup=maskSup, noise_method=noise_method,plotfile=plotfile,clip=True)
 
+        #self.expected_rms = calculate_expected_rms(self.RA,self.DEC,self.Date,observation_time=8)
+        self.expected_rms = 75e-5 #until we have a better expectation/functioning calculation
 
         return self.rms  # jy/beam
 
-    def peakflux(self):
-        self.data_max = get_peakflux(self.image_data)
-        return self.data_max
+    def get_statistics(self):
+        self.peak = get_peakflux(self.image_data)
+        self.min = get_min(self.image_data)
+        self.minmax = get_minmax(self.image_data)
+        if self.rms != None:
+            self.dyn_range = get_dyn_range(self.peak,self.rms)
+        else:
+            self.rms = self.get_rms(self)
+            self.dyn_range = get_dyn_range(self.peak,self.rms)
 
-    def min(self):
-        self.data_min = get_min(self.image_data)
+        print("Statistics derived:\nPeak={}\nMin={}\nMinMax={}\nDyn_range={}\n".format(self.peak,self.min,self.minmax,self.dyn_range))
+        return self.peak,self.min,self.minmax,self.dyn_range
 
-        return self.data_min
-
-    def minmax(self):
-        self.data_minmax = get_minmax(self.image_data)
-        return self.data_minmax
-
-    def dyn_range(self):
-        self.data_dyn_range = get_dyn_range(self.image_data)
-
-        return self.data_dyn_range
-
-    def get_quality:
-        valid, diagnostics = image_quality(self.rms, self.data_dyn_range, self.peak_max, self.expected_rms, cut_DR=10, cut_rms=3):
+    def get_quality(self):
+        valid, diagnostics = image_quality(self.rms, self.dyn_range, self.peak, self.expected_rms, cut_DR=10, cut_rms=3)
 
 ###########################
 
@@ -200,26 +200,18 @@ def get_minmax(image):
     data_minmax = np.abs(data_min/data_max)
     return data_minmax
 ####
-def get_dyn_range(image):
+def get_dyn_range(peak,rms):
     """
     Get the dynamic range.
     """
-    print("Deriving dunamic range.\n")
-    try:
-        data_max = image.data_max
-    except:
-        data_max = get_peakflux(image)
-    try:
-        data_rms = image.rms
-    except:
-        data_rms = get_rms(image)
-    data_dyn_range = data_max/data_rms
+    print("Deriving dynamic range.\n")
+    data_dyn_range = peak/rms
     return data_dyn_range
 ####
 def get_image_rms(image,
             maskSup:float = 1e-7,
             sigma:int = 3.,
-            noise_method:str = "Image RMS",
+            noise_method:str = "Histogram Fit",
             residual_image = False,
             plotfile = 'Histofram_fit.png',
             plot_hist = True,
@@ -233,15 +225,12 @@ def get_image_rms(image,
     """
     if noise_method == "Histogram Fit":
         print("Deriving noise using a Histogram Fit.\n")
-       # try:
         Z1 = image.flatten()
-        #clip = False
         sigma=10
         if clip:
             print("Clipping data to < rms*sigma")
             m = Z1[np.abs(Z1) > maskSup]
             rmsold = np.std(m)
-            #print(m)
             med = np.median(m)
             ind = np.where(np.abs(m-med) < rmsold*sigma)[0]
             Z1 = m[ind]
@@ -277,10 +266,8 @@ def get_image_rms(image,
             plt.tight_layout()
             plt.savefig(plotfile, dpi=150)
             plt.show()
-            plt.close()
+           # plt.close()
             print(f"Saved plot to {plotfile}")
-   #     except:
-    #        rms=0
 
     elif noise_method == "Image RMS":
         """
