@@ -13,6 +13,8 @@ from astropy.coordinates import *
 from datetime import timedelta, datetime
 from astropy.time import Time
 import pyregion
+from matplotlib import patheffects as pe
+from scipy.ndimage import center_of_mass
 
 
 
@@ -193,7 +195,7 @@ class ImageData(object):
 
     def make_facets_from_reg(self, save_facets_im=True):
         shapes = pyregion.open(self.reg_file).as_imagecoord(self.header)
-        facets = np.zeros((self.imagesize,self.imagesize), dtype=np.int32) - 1
+        facets = np.full((self.imagesize, self.imagesize), -1, dtype=np.int32)
 
         for n, shape in enumerate(shapes):
             mask = pyregion.ShapeList([shape]).get_mask(shape=(self.imagesize,self.imagesize))
@@ -205,6 +207,26 @@ class ImageData(object):
 
         if save_facets_im:
             plt.imsave(f"{self.id}_facets_map.png", facets)
+
+        if save_labeled_png:
+            ids = np.unique(facets)
+            ids = ids[ids >= 0]  # skip background (-1)
+            # draw with a qualitative colormap
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.imshow(facets, cmap="tab20", interpolation="nearest")
+            ax.set_axis_off()
+    
+            # centers of each facet
+            centers = center_of_mass(np.ones_like(facets), labels=facets, index=ids)
+            for fid, (y, x) in zip(ids, centers):
+                ax.text(
+                    x, y, str(fid),
+                    ha="center", va="center", fontsize=9, color="white",
+                    path_effects=[pe.withStroke(linewidth=2, foreground="black")]
+                )
+    
+            fig.savefig(f"{self.id}_facets_map_labeled.png", dpi=200, bbox_inches="tight", pad_inches=0)
+            plt.close(fig)
 
 ###########################
 
