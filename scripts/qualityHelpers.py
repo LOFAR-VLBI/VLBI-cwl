@@ -132,7 +132,7 @@ class ImageData(object):
              
         print("Calculating Image rms.")
         if use_residual_img and self.residual_file !="":
-            print("Using residual image for estimating rms.\n")
+            print("Using residual image for estimating rms")
             self.rms = get_image_rms(self.residual_Z, noise_method=noise_method, residual_image=self.residual_Z,plotfile=plotfile,sigma=sigma)
         else:
             if self.residual_file =="":
@@ -169,6 +169,7 @@ class ImageData(object):
 
     def get_facet_statistics(self):
         facet_ids = np.unique(self.facets)
+        facet_ids = np.delete(facet_ids, facet_ids==-1)    #remove the default -1 value
         self.facet_stats_matrix = []
         for facet_id in facet_ids:
             mask = (self.facets == facet_id)
