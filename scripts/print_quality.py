@@ -92,12 +92,13 @@ def main():
     kwargs = {"fits_file": args.image_fits}
     if args.residual_fits:
         kwargs["residual_file"] = args.residual_fits
+    
+    print(kwargs)
 
     image = ImageData(**kwargs)
     
     #First Saving Global Statistics 
-    global_statistics = {"Name": "Global"}
-    global_statistics.update(image.get_statistics())
+    global_statistics = image.get_statistics()
 
     header = global_statistics.keys()
     write_header = not Path(out_csv).exists()

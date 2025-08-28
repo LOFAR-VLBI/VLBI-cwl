@@ -165,7 +165,7 @@ class ImageData(object):
         if self.rms:
             self.dyn_range = get_dyn_range(self.peak,self.rms)
         else:
-            self.rms = self.get_rms(self)
+            self.rms = self.get_rms()
             self.dyn_range = get_dyn_range(self.peak,self.rms)
         stats_matrix ={
                 'id': self.id,
