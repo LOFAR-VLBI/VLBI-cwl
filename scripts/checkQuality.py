@@ -98,20 +98,18 @@ def main():
     #First Saving Global Statistics 
     global_statistics = image.get_statistics()
 
-    header = global_statistics.keys()
-    write_header = not Path(out_csv).exists()
-    with open(out_csv, "a", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=header)
-        if write_header:
-            w.writeheader()
-        w.writerow(global_statistics)
-
     #plot rms as a function of distance from phase center. RMS calculated in annular regions
     r, rms = plot_radial_rms(image.residual_Z, image.pixelscale)
     
     image.make_facets_from_reg()
-    image.get_facet_statistics()
+    facet_statistics = image.get_facet_statistics()
 
+    print("************FACET STATS***********")
+    print(facet_statistics)
+
+    
+    global_statistics["lotss_fraction_matched"] = "--compare-lotss is False"
+    global_statistics["median_tot_fluxratio"]   = "--compare-lotss is False"
     if args.compare_lotss:
         externalcat = args.lotss_cat_path
         highresimage = args.image_fits
@@ -125,7 +123,35 @@ def main():
         print("\n running smearing corrections")
         mode_fluxratio, std_fluxratio = smearing_corrected_sourcesizes(highrescat,highresrmsimage,True,verbose=True)
         fraction_matched, median_tot_fluxratio = compare_with_external_catalog(highrescat, highresrmsimage, externalcat, 1E-3, verbose=True)
+        global_statistics["lotss_fraction_matched"] = fraction_matched
+        global_statistics["median_tot_fluxratio"]   = median_tot_fluxratio
+    
+    header = global_statistics.keys()
+    
+    #write global 
+    write_header = not Path(out_csv).exists()
+    with open(out_csv, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=header)
+        if write_header:
+            w.writeheader()
+        w.writerow(global_statistics)
 
-
+    #write facet stats
+    with open(out_csv, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=header)
+        for facet in facet_statistics:
+            facet_dict = {
+                'id': f'facet_{facet["facet"]}', 
+                'rms': facet["rms"], 
+                'peak': facet["peak"], 
+                'dyn_range': facet["dyn_range"], 
+                'rms_limit': facet["rms_limit"], 
+                'peak_limit': facet["peak_limit"], 
+                'valid': facet["valid"],
+                'fraction_matched': "-NA-",
+                'median_tot_fluxratio': "-NA-",
+            }
+            w.writerow(facet_dict)
+    
 if __name__ == "__main__":
     sys.exit(main())
