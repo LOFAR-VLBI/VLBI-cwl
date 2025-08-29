@@ -140,7 +140,7 @@ def main():
     with open(out_csv, "a", newline="") as f:
         w = csv.DictWriter(f, fieldnames=header)
         for facet in facet_statistics:
-            facet_dict = {
+            facet_dict = {}
                 'id': f'facet_{facet["facet"]}', 
                 'rms': facet["rms"], 
                 'peak': facet["peak"], 
@@ -148,7 +148,7 @@ def main():
                 'rms_limit': facet["rms_limit"], 
                 'peak_limit': facet["peak_limit"], 
                 'valid': facet["valid"],
-                'fraction_matched': "-NA-",
+                'lotss_fraction_matched': "-NA-",
                 'median_tot_fluxratio': "-NA-",
             }
             w.writerow(facet_dict)
