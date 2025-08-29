@@ -333,6 +333,7 @@ def get_image_rms(image,
         if rms > 1e-7 and rms < 1:
             print(f"RMS from {noise_method} is within the loose constratints of 1e-6 < RMS < 1")
             print(f"Using this RMS value of: {rms}")
+            return rms
         else:
             noise_method == "Image RMS"
 
@@ -363,6 +364,7 @@ def get_image_rms(image,
         if rms > 1e-7 and rms < 1:
             print(f"RMS from {noise_method} is within the loose constratints of 1e-6 < RMS < 1")
             print(f"Using this RMS value of: {rms}")
+            return rms
         else:
             noise_method == "Residual"
 
