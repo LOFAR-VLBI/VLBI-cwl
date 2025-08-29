@@ -131,7 +131,7 @@ class ImageData(object):
         if use_facet is not None:
             print("Calculating Facet rms")
             return get_image_rms(use_facet, noise_method=noise_method,plotfile=plotfile,clip=True,sigma=sigma)
-             
+
         print("Calculating Image rms.")
         if use_residual_img and self.residual_file !="":
             print("Using residual image for estimating rms")
@@ -165,7 +165,7 @@ class ImageData(object):
                 'peak': self.peak,
                 'dyn_range': self.dyn_range,
             }
-        
+
         self.stats_matrix = image_quality(stats_matrix)
         return stats_matrix
 
@@ -188,7 +188,7 @@ class ImageData(object):
                 'peak': peak,
                 'dyn_range': dyn_range,
             }
-            
+
             print(f"{facet_id}: stats: {facet_stats_matrix}")
             self.facet_stats_matrix.append(image_quality(facet_stats_matrix))
         return self.facet_stats_matrix
@@ -214,7 +214,7 @@ class ImageData(object):
             fig, ax = plt.subplots(figsize=(8, 8))
             ax.imshow(facets, cmap="tab20", interpolation="nearest")
             ax.set_axis_off()
-    
+
             # centers of each facet
             centers = center_of_mass(np.ones_like(facets), labels=facets, index=ids)
             for fid, (y, x) in zip(ids, centers):
@@ -223,7 +223,7 @@ class ImageData(object):
                     ha="center", va="center", fontsize=9, color="white",
                     path_effects=[pe.withStroke(linewidth=2, foreground="black")]
                 )
-    
+
             fig.savefig(f"{self.id}_facets_map_labeled.png", dpi=200, bbox_inches="tight", pad_inches=0)
             plt.close(fig)
 
@@ -300,6 +300,7 @@ def get_image_rms(image,
         fit_t = fitting.LevMarLSQFitter()
         t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
         rms = t.stddev.value
+        print(fit_t.fit_info['ierr'], fit_t.fit_info['message'])
         print("rms estimated. Now plotting the histogram.\n")
 
         # Plot
@@ -307,6 +308,7 @@ def get_image_rms(image,
             plt.figure(figsize=(8,5))
             plt.stairs(bin_heights, bin_borders,fill=True)
             plt.plot(bin_centers, t(bin_centers), 'r-', linewidth=2, label='Gaussian Fit')
+            plt.plot(bin_centers, t_init(bin_centers),'g-',linewidth=2,label='Initial Gaussian')
             plt.xlabel('Pixel Value')
             plt.ylabel('Count')
             plt.title('Histogram and Gaussian Fit')
