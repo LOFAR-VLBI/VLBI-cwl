@@ -329,7 +329,14 @@ def get_image_rms(image,
             plt.close()
             print(f"Saved plot to {plotfile}")
 
-    elif noise_method == "Image RMS":
+        #Check is RMS is not absurd. If it is fine, return now. Else resort to next rms calculation method
+        if rms > 1e-7 and rms < 1:
+            print(f"RMS from {noise_method} is within the loose constratints of 1e-6 < RMS < 1")
+            print(f"Using this RMS value of: {rms}")
+        else:
+            noise_method == "Image RMS"
+
+    if noise_method == "Image RMS":
         """
         Get the RMS (code from Cyril Rasse/kMS)
 
@@ -352,7 +359,14 @@ def get_image_rms(image,
                 break
             rmsold = rms
 
-    elif noise_method == "Residual":
+        #Check is RMS is not absurd. If it is fine, return now. Else resort to next rms calculation method
+        if rms > 1e-7 and rms < 1:
+            print(f"RMS from {noise_method} is within the loose constratints of 1e-6 < RMS < 1")
+            print(f"Using this RMS value of: {rms}")
+        else:
+            noise_method == "Residual"
+
+    if noise_method == "Residual":
         sys.stdout.write("Residual method for noise used\n")
         try:
             Z1 = residual_image.flatten()
