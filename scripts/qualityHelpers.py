@@ -73,7 +73,6 @@ def image_quality(stats_matrix, expected_rms=75e-5, cut_peak=0.1, cut_rms=3):
     return stats_matrix
 
 
-#ID, rms, peak, dyn_range, rms_limit, peak_limit, valid, fraction_matched, median_tot_fluxratio
 def validate_facets(csv_table):
     """
     Get facet statistics
@@ -84,15 +83,16 @@ def validate_facets(csv_table):
     df = pd.read_csv(csv_table)
 
     sigma = 0.5
-    rms_mean = df.iloc[0]['rms']
-    rms_delta = sigma*df_rms[0]
+    rms_mean = df.rms[0]
 
     rms_deviation = np.abs(df['rms'] - rms_mean)
     accept_image = True
-    if (df['valid'] == False).any():
+    if any(df['valid'] == False):
         accept_image = False
-    if (rms_deviation > sigma * rms_mean).any():
+        print('At least one valid_flag for a facet is False.\n')
+    if any(rms_deviation > sigma * rms_mean):
         accept_image = False
+        print('For at least one facet the rms deviates more than {} x rms_mean.\n'.format(sigma))
 
     print('Validation check for all facets: {}'.format(accept_image))
     return accept_image
