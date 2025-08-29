@@ -206,13 +206,13 @@ class ImageData(object):
         print("facets file created")
 
         if save_facets_im:
-            plt.imsave(f"{self.id}_facets_map.png", facets)
+            plt.imsave(f"{self.id}_facets_map.png", facets[::-1, :])
 
             ids = np.unique(facets)
             ids = ids[ids >= 0]  # skip background (-1)
             # draw with a qualitative colormap
             fig, ax = plt.subplots(figsize=(8, 8))
-            ax.imshow(facets, cmap="tab20", interpolation="nearest")
+            ax.imshow(facets, cmap="tab20", interpolation="nearest", origin='lower')
             ax.set_axis_off()
 
             # centers of each facet
