@@ -296,14 +296,14 @@ def get_image_rms(image,
         bin_centers = bin_borders[:-1] + bin_widths / 2.
         bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
         print('Fitting Histogram to image with clipping={}'.format(clip))
-        t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1), np.std(Z1_2))
-        #fit_t = fitting.LevMarLSQFitter(calc_uncertainties=True)
-        #t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
-        #rms = t.stddev.value
-        fit_t = fitting.SimplexLSQFitter()
+        t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1), np.std(Z1))
+        fit_t = fitting.LevMarLSQFitter(calc_uncertainties=True)
         t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
         rms = t.stddev.value
-        print(fit_t.fit_info)
+        #fit_t = fitting.SimplexLSQFitter()
+        #t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
+        ##rms = t.stddev.value
+        #print(fit_t.fit_info)
         print("rms estimated: rms = {}. Now plotting the histogram.\n".format(rms))
 
         if plot_hist:
