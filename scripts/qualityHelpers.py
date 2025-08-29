@@ -291,20 +291,27 @@ def get_image_rms(image,
             print("Clipping data to < rms*sigma= {}".format(rmsold,sigma))
             ind = np.where(np.abs(m-med) < rmsold*sigma)[0]
             Z1 = m[ind]
-        Z1_2 = Z1 - np.min(Z1) + 10 ** (-5)
+        #Z1_2 = Z1 - np.min(Z1) + 10 ** (-5)
+        Z1_2 = Z1
         bin_heights, bin_borders = np.histogram(Z1_2, bins=300)
         bin_widths = np.diff(bin_borders)
         bin_centers = bin_borders[:-1] + bin_widths / 2.
         bin_heights_err = np.where(bin_heights != 0, np.sqrt(bin_heights), 1)
         print('Fitting Histogram to image with clipping={}'.format(clip))
         t_init = models.Gaussian1D(np.max(bin_heights), np.median(Z1_2), np.std(Z1_2))
-        fit_t = fitting.LevMarLSQFitter(calc_uncertainties=True)
+        #fit_t = fitting.LevMarLSQFitter(calc_uncertainties=True)
+        #t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
+        #rms = t.stddev.value
+        fit_t = fitting.SimplexLSQFitter()
         t = fit_t(t_init, bin_centers, bin_heights, weights=1. / bin_heights_err)
         rms = t.stddev.value
         print(fit_t.fit_info)
-        print("rms estimated. Now plotting the histogram.\n")
+        print("rms estimated: rms = {}. Now plotting the histogram.\n".format(rms))
 
-        # Plot
+        # Using Median Absolute Deviation (MAD)
+        mad = np.median(np.abs(Z1_2 - np.median(Z1_2)))
+        rms_mad = mad * 1.4826  # for Gaussian noise        # Plot
+        print("rms estimate for median absolute deviation: rms_mad = {}".format(rms_mad))
         if plot_hist:
             plt.figure(figsize=(8,5))
             plt.stairs(bin_heights, bin_borders,fill=True)
