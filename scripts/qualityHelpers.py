@@ -72,6 +72,31 @@ def image_quality(stats_matrix, expected_rms=75e-5, cut_peak=0.1, cut_rms=3):
     print(stats_matrix)
     return stats_matrix
 
+
+#ID, rms, peak, dyn_range, rms_limit, peak_limit, valid, fraction_matched, median_tot_fluxratio
+def validate_facets(csv_table):
+    """
+    Get facet statistics
+
+    Args:
+        :csv_table: CSV with facet-based scores
+    """
+    df = pd.read_csv(csv_table)
+
+    sigma = 0.5
+    rms_mean = df.iloc[0]['rms']
+    rms_delta = sigma*df_rms[0]
+
+    rms_deviation = np.abs(df['rms'] - rms_mean)
+    accept_image = True
+    if (df['valid'] == False).any():
+        accept_image = False
+    if (rms_deviation > sigma * rms_mean).any():
+        accept_image = False
+
+    print('Validation check for all facets: {}'.format(accept_image))
+    return accept_image
+
 class ImageData(object):
     """ Load lofar image and get basic info
     """
