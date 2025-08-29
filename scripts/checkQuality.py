@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+__author__ = "Hrishikesh Shetgaonkar"
+
 from qualityHelpers import *
 import argparse
 import sys

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+__author__ = "Anne-Kathrin Baczko"
+
 from astropy.io import fits
 import numpy as np
 import os
