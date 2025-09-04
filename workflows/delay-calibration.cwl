@@ -128,6 +128,17 @@ inputs:
       default: true
       doc: When set to true, the delay calibration solutions will be applied on the full MS.
 
+    - id: rm_correction
+      type:
+        type: enum
+        symbols:
+          - "RMextract"
+          - "spinifex"
+      default: "spinifex"
+      doc: |
+        The name of the target solution table to use from the solset input for
+        rotation measure corrections.
+
 steps:
     - id: setup
       label: setup
@@ -147,6 +158,8 @@ steps:
           source: number_cores
         - id: Ateam_skymodel
           source: Ateam_skymodel
+        - id: rm_correction
+          source: rm_correction
       out:
         - id: logdir
         - id: msout

@@ -30,6 +30,17 @@ inputs:
     default: TGSSphase
     doc: The type of correction to perform.
 
+  - id: rm_correction
+    type:
+      type: enum
+      symbols:
+        - "RMextract"
+        - "spinifex"
+    default: "spinifex"
+    doc: |
+      The name of the target solution table to use from the solset input for
+      rotation measure corrections.
+
 stdout: dp3.parset
 outputs:
   - id: parset
@@ -86,7 +97,7 @@ requirements:
           applybeam.updateweights             =   true
           #
           applyRM.type                        =   applycal
-          applyRM.correction                  =   RMextract
+          applyRM.correction                  =   $(inputs.rm_correction)
           applyRM.solset                      =   target
           #
           applyphase.type                     =   applycal
