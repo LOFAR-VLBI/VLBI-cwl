@@ -77,6 +77,17 @@ inputs:
       type: File
       doc: The skymodel to use in clipping bright sources.
 
+    - id: rm_correction
+      type:
+        type: enum
+        symbols:
+          - "RMextract"
+          - "spinifex"
+      default: "spinifex"
+      doc: |
+        The name of the target solution table to use from the solset input for
+        rotation measure corrections.
+
 requirements:
     - class: SubworkflowFeatureRequirement
     - class: MultipleInputFeatureRequirement
@@ -123,6 +134,8 @@ steps:
           source: solset
         - id: phasesol
           source: phasesol
+        - id: rm_correction
+          source: rm_correction
       out:
         - id: parset
       run: ../steps/dp3_make_parset.cwl
