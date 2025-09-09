@@ -212,7 +212,6 @@ steps:
         linkMerge: merge_flattened
         source:
           - prep_delay/logfile
-          - concat_logfiles_phaseup/output
           - sort_concatenate/logfile
           - concat_logfiles_phaseup/output
           - delay_cal_model/logfile
