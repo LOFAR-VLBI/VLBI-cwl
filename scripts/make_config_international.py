@@ -5,6 +5,7 @@ __author__ = "Jurjen de Jong"
 
 from argparse import ArgumentParser
 import re
+from os.path import basename
 
 import numpy as np
 import pandas as pd
@@ -185,7 +186,7 @@ early_stopping                  = True
         f.write(config)
 
 
-def parse_source_id(inp_str: str = None):
+def parse_source_id(input_string: str):
     """
     Parse ILTJhhmmss.ss±ddmmss.s source_id string
 
@@ -197,11 +198,12 @@ def parse_source_id(inp_str: str = None):
     """
 
     try:
-        parsed_inp = re.findall(r'ILTJ\d{6}\.\d{2}[+\-]\d{6}\.\d{1}', inp_str)[0]
+        parsed_input = re.findall(r'ILTJ\d{6}\.\d{2}[+\-]\d{6}\.\d{1}', input_string)[0]
     except IndexError:
-        print(f"Error: {inp_str} does not contain a valid source ID")
+        parsed_input = basename(input_string)
+        print(f"WARNING: {input_string} does not contain a valid source ID (ILTJhhmmss.ss±ddmmss.s)")
 
-    return parsed_inp
+    return parsed_input
 
 
 def get_solint(ms, phasediff_output):

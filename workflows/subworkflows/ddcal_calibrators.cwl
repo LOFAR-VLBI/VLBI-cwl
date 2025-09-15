@@ -16,6 +16,10 @@ inputs:
     type: File?
     doc: CSV with DD selection positions and phasediff scores.
 
+  - id: model_cache
+    type: string?
+    doc: Neural network cache directory.
+
 steps:
     - id: ddcal
       in:
@@ -25,6 +29,8 @@ steps:
           source: dd_dutch_solutions
         - id: phasediff_score_csv
           source: phasediff_score_csv
+        - id: model_cache
+          source: model_cache
       out:
         - merged_h5
         - fits_images
@@ -32,14 +38,6 @@ steps:
         - solution_inspection_images
       run: ./auto_selfcal.cwl
       scatter: msin
-
-    - id: multidir_merge
-      in:
-        - id: h5parms
-          source: ddcal/merged_h5
-      out:
-        - multidir_h5
-      run: ../../steps/multidir_merger.cwl
 
     - id: flatten_images
       in:
@@ -59,12 +57,13 @@ steps:
 
 requirements:
   - class: ScatterFeatureRequirement
+  - class: SubworkflowFeatureRequirement
 
 outputs:
-  - id: final_merged_h5
-    type: File
-    outputSource: multidir_merge/multidir_h5
-    doc: Final merged h5parm with calibration solutions from multiple calibrator directions
+  - id: h5parms
+    type: File[]
+    outputSource: ddcal/merged_h5
+    doc: Array of h5parms where each h5parm corresponds to the full cumulative calibration solutions for that calibrator
 
   - id: selfcal_images
     type: File[]

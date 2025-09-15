@@ -12,6 +12,7 @@ inputs:
       doc: Input MeasurementSet
       inputBinding:
         position: 20
+        valueFrom: $(self.basename)
 
 outputs:
     - id: phasediff_h5out

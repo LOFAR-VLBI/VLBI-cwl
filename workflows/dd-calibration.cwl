@@ -66,8 +66,11 @@ inputs:
       default: 0.025
       doc: Peak flux (Jy/beam) cut to pre-select sources from catalogue.
 
-steps:
+    - id: model_cache
+      type: string?
+      doc: Neural network cache directory.
 
+steps:
     - id: split_directions
       label: Split out calibrator sources in separate measurement sets
       in:
@@ -102,17 +105,47 @@ steps:
             - custom_phasediff_score_csv
             - split_directions/phasediff_score_csv
           pickValue: first_non_null
+        - id: model_cache
+          source: model_cache
       out:
-        - final_merged_h5
+        - h5parms
         - selfcal_images
         - selfcal_inspection_images
         - solution_inspection_images
       run: ./subworkflows/ddcal_calibrators.cwl
 
+    - id: validation
+      in:
+        - id: images
+          source: ddcal_int/selfcal_images
+        - id: h5parm
+          source: ddcal_int/h5parms
+        - id: model_cache
+          source: model_cache
+        - id: dd_selection
+          source: dd_selection
+      out:
+        - h5parm_selected
+        - images_selected
+        - validate_csv
+      when: $(inputs.dd_selection)
+      run: ./subworkflows/ddcal_validation.cwl
+
+    - id: multidir_merge
+      in:
+        - id: h5parms
+          source:
+            - validation/h5parm_selected
+            - ddcal_int/h5parms
+          pickValue: first_non_null
+      out:
+        - multidir_h5
+      run: ../steps/multidir_merger.cwl
+
 outputs:
     - id: final_merged_h5
       type: File
-      outputSource: ddcal_int/final_merged_h5
+      outputSource: multidir_merge/multidir_h5
       doc: Final multi-directional h5parm
 
     - id: phasediff_score_csv
@@ -120,17 +153,33 @@ outputs:
       outputSource: split_directions/phasediff_score_csv
       doc: Phasediff-score CSV file
 
-    - id: best_FITS_images
+    - id: validation_csv
+      type: File?
+      outputSource: validation/validate_csv
+      doc: Validation CSV file
+
+    - id: FITS_images
       type: File[]
-      outputSource: ddcal_int/selfcal_images
+      outputSource:
+        - validation/images_selected
+        - ddcal_int/selfcal_images
+      pickValue: first_non_null
       doc: Best self-calibration image in FITS format
 
-    - id: selfcal_PNG_images
+    - id: calibration_solutions
       type: File[]
-      outputSource: ddcal_int/selfcal_inspection_images
-      doc: Self-calibration images in PNG format
+      outputSource:
+        - validation/h5parm_selected
+        - ddcal_int/h5parms
+      pickValue: first_non_null
+      doc: Best self-calibration solutions in h5parm format
 
     - id: solution_inspection_images
       type: Directory[]
       outputSource: ddcal_int/solution_inspection_images
       doc: LoSoTo solution inspection images
+
+    - id: selfcal_PNG_images
+      type: File[]
+      outputSource: ddcal_int/selfcal_inspection_images
+      doc: Self-calibration images in PNG format
