@@ -38,11 +38,19 @@ inputs:
         position: 4
         separate: true
 
+    - id: model_cache
+      type: string?
+      doc: Neural network cache directory.
+      inputBinding:
+        prefix: "--nn-model-cache"
+        position: 5
+        separate: true
+
 outputs:
     - id: h5_facetselfcal
       type: File
       outputBinding:
-        glob: 'best_solutions.h5'
+        glob: 'best_ILTJ*solutions.h5'
       doc: The output merged calibration solution files generated in HDF5 format, selected during self-calibration.
 
     - id: selfcal_images

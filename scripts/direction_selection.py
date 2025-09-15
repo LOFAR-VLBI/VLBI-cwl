@@ -4,13 +4,14 @@
 __author__ = "Jurjen de Jong"
 
 import os
-import re
 import sys
 from argparse import ArgumentParser
 
 import pandas as pd
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+
+from make_config_international import parse_source_id
 
 
 def filter_too_nearest_neighbours(csv: str = None, sep: float = 0.1):
@@ -57,22 +58,6 @@ def filter_too_nearest_neighbours(csv: str = None, sep: float = 0.1):
     filtered_df = df.drop(index=to_remove).reset_index(drop=True)
 
     return filtered_df
-
-
-def parse_source_id(inp_str: str = None):
-    """
-    Parse ILTJ... source_id string
-
-    Args:
-        inp_str: ILTJ source_id
-
-    Returns: parsed output
-
-    """
-
-    parsed_inp = re.findall(r'ILTJ\d+\..\d+\+\d+.\d+', inp_str)[0]
-
-    return parsed_inp
 
 
 def match_source_id(mslist: list = None, source_id: str = None):

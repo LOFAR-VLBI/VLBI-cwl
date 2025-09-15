@@ -16,6 +16,10 @@ inputs:
     type: File?
     doc: CSV with DD selection positions and phasediff scores.
 
+  - id: model_cache
+    type: string?
+    doc: Neural network cache directory.
+
 steps:
     - id: find_closest_h5
       in:
@@ -74,6 +78,8 @@ steps:
           pickValue: first_non_null
         - id: configfile
           source: make_dd_config/dd_config
+        - id: model_cache
+          source: model_cache
       out:
         - h5_facetselfcal
         - selfcal_images
