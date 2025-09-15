@@ -8,6 +8,9 @@ doc: |
 
 baseCommand: facetselfcal
 
+arguments:
+  - prefix: --auto
+    valueFrom: $(inputs.configfile == null) 
 inputs:
     - id: msin
       type: Directory
@@ -28,7 +31,7 @@ inputs:
         cycle in the self-calibration.
 
     - id: configfile
-      type: File
+      type: File?
       inputBinding:
         position: 0
         prefix: --configpath
