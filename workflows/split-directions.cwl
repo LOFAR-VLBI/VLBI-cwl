@@ -60,7 +60,7 @@ inputs:
       default: 0.0
       doc: Peak flux (Jy/beam) cut to pre-select sources from catalogue. Default at 0.0 is no peak flux selection.
     - id: configfile
-      type: File
+      type: File?
       default: null
       doc: The configuration file to be used to run facetselfcal.py during the target_selfcal step.
 
