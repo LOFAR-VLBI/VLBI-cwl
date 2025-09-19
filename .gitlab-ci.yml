@@ -14,7 +14,9 @@ after_script:
 
 versioning:
   stage: version
-  image: bitnami/git
+  image:
+    name: alpine/git
+    entrypoint: [""]
   script:
     # Unshallowing ensures that 'git describe' works
     - git fetch --unshallow
