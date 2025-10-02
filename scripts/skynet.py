@@ -8,7 +8,7 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 import bdsf
 
-def write_skymodel (model, outname):
+def write_skymodel(model, outname):
 
     print(f'writing the skymodel for: {model}')
     with open(outname, 'w') as skymodel:
@@ -37,13 +37,13 @@ def write_skymodel (model, outname):
             )
             skymodel.write( '{:s}\n'.format(ss_to_write) )
 
-def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
-    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10))
+def model_from_image(modelImage, smodel, opt_coords, astroSearchRadius=3.0, outdir='.'):
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), outdir=outdir)
     sources = img.sources
     maxval = 0.
     for src in sources:
         maxval = np.max( (maxval, src.total_flux) )
-    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval)
+    img = bdsf.process_image(modelImage, mean_map='zero', rms_map=True, rms_box = (100,10), advanced_opts=True, blank_limit=0.01*maxval, outdir=outdir)
     sources = img.sources
     # Scale model flux density to the provided value.
     tot_flux = 0.
@@ -81,7 +81,7 @@ def model_from_image( modelImage, smodel, opt_coords, astroSearchRadius=3.0 ):
 
 ################## skynet ##############################
 
-def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False):
+def main(MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False, outdir='.'):
     """
     Generates a skymodel for sources in delayCalFile for delay calibration.
     Uses modelImage as a base model if provided, otherwise will construct a
@@ -168,7 +168,8 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
             modelImage,
             smodel,
             opt_coords,
-            astroSearchRadius=astroSearchRadius
+            astroSearchRadius=astroSearchRadius,
+            outdir=outdir
         )
     else:
         used_vlass = False
@@ -189,7 +190,8 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
                     vlass_file[0],
                     smodel,
                     opt_coords,
-                    astroSearchRadius=astroSearchRadius
+                    astroSearchRadius=astroSearchRadius,
+                    outdir=outdir
                 )
                 used_vlass = True
             else:
@@ -221,7 +223,7 @@ def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fal
         for i in range(len(sky_model)):
             sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
 
-    write_skymodel (sky_model,'skymodel.txt')
+    write_skymodel(sky_model,'skymodel.txt')
 
 
 if __name__ == "__main__":
@@ -229,11 +231,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Skynet script to handle LBCS calibrators.")
 
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
-    parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
-    parser.add_argument('--model-image', type=str, help='image for generating starting model', default='')
-    parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
-    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='skip vlass search and generate point source model')
+    parser.add_argument('--delay-cal-file', required=True, type=str,help='Delay calibrator information')
+    parser.add_argument('--model-image', type=str, help='Image for generating starting model', default='')
+    parser.add_argument('--astrometric-search-radius', type=float, help='Search radius in arcsec to accept a match',default=3.0)
+    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='Skip vlass search and generate point source model')
+    parser.add_argument('--outdir', type=str, help='Output directory', default='.')
 
     args = parser.parse_args()
 
-    main( args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass )
+    main(args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass, outdir=args.outdir)
