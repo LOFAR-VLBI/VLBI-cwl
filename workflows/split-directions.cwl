@@ -55,6 +55,10 @@ inputs:
       doc: |
          Phasediff-score for calibrator selection <2.3 good for DD-calibrators and <0.7 good for DI-calibrators.
          Only used when dd_selection==true.
+    - id: select_best_n
+      type: int?
+      default: 0
+      doc: Return only the best N sources. Only used when dd_selection=true.
     - id: peak_flux_cut
       type: float
       default: 0.0
@@ -63,6 +67,18 @@ inputs:
       type: File?
       default: null
       doc: The configuration file to be used to run facetselfcal.py during the target_selfcal step.
+
+    - id: frequency_resolution
+      type: string?
+      default: '390.56kHz'
+      doc: |
+        Frequency resolution for the split off datasets.
+
+    - id: time_resolution
+      type: string?
+      default: '32.'
+      doc: |
+        Time resolution in seconds for the split off datasets.
 
 steps:
     - id: select_bright_sources
@@ -91,6 +107,10 @@ steps:
           pickValue: first_non_null
         - id: delay_solutions
           source: delay_solset
+        - id: time_resolution
+          source: time_resolution
+        - id: frequency_resolution
+          source: frequency_resolution
       out:
         - id: parset
       run: ./subworkflows/split_parset.cwl
@@ -153,6 +173,8 @@ steps:
           source: dd_selection
         - id: phasediff_score
           source: phasediff_score
+        - id: select_best_n
+          source: select_best_n
       out:
         - id: phasediff_score_csv
         - id: best_ms
@@ -177,6 +199,7 @@ steps:
       when: $(inputs.do_selfcal)
       run: ../steps/facet_selfcal.cwl
       scatter: msin
+      scatterMethod: dotproduct
 
 outputs:
     - id: msout_concat
@@ -198,7 +221,9 @@ outputs:
       type: File?
       outputSource: ddcal_pre_selection/phasediff_score_csv
     - id: h5parm
-      type: File[]
+      type: 
+        - File
+        - File[]
       outputSource:
         - target_selfcal/h5parm
       pickValue: all_non_null
