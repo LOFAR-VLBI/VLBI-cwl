@@ -3,7 +3,7 @@ cwlVersion: v1.2
 id: delay_cal_model
 label: Delay cal model
 doc: |
-    Creates a skymodel for use in the self-calibration.
+    Create one or more skymodels for use in the self-calibration.
 
 baseCommand: skynet.py
 
@@ -30,11 +30,22 @@ inputs:
         prefix: --model-image
         separate: true
 
+    - id: process_all
+      type: boolean?
+      default: false
+      doc: |
+        If true, create a model for every entry in `delay_calibrator`.
+        Otherwise, create one only for the first entry.
+      inputBinding:
+        position: 1
+        prefix: --process-all
+
 outputs:
     - id: skymodel
-      type: File
+      type:
+        - File[]
       outputBinding:
-        glob: skymodel.txt
+        glob: skymodel*.txt
       doc: The skymodel of the delay calibrator.
 
     - id: logfile

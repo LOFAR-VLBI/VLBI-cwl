@@ -22,6 +22,10 @@ inputs:
       type: float
       default: 2.3
       doc: Phasediff-score for calibrator selection <2.3 good for DD-calibrators and <0.7 good for DI-calibrators.
+    - id: select_best_n
+      type: int?
+      default: 1
+      doc: Return this number of best sources according to the selection metric.
 
 steps:
     - id: Phasediff
@@ -81,6 +85,8 @@ steps:
           source: msin
         - id: phasediff_score
           source: phasediff_score
+        - id: select_best_n
+          source: select_best_n
       out:
         - best_ms
       run: ../../steps/select_best_directions.cwl

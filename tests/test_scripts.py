@@ -39,7 +39,7 @@ def test_skynet():
     import filecmp
 
     main_skynet(f"{data_dir}/ILTJ140815.23+522952.0", catalogue)
-    assert filecmp.cmp(skymodel, "skymodel.txt", shallow=False)
+    assert filecmp.cmp(skymodel, "skymodel_ILTJ140815.23+522952.0.txt", shallow=False)
 
 def test_compare_stations():
     import glob

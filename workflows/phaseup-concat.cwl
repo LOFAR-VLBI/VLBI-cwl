@@ -175,6 +175,7 @@ steps:
         valueFrom: $(self[0])
       - id: skymodel
         source: delay_cal_model/skymodel
+        valueFrom: $(self[0])
       - id: configfile
         source: configfile
       - id: number_cores

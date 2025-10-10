@@ -81,7 +81,7 @@ def model_from_image(modelImage, smodel, opt_coords, astroSearchRadius=3.0, outd
 
 ################## skynet ##############################
 
-def main(MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False, outdir='.'):
+def main (MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=False, outdir='.', process_all: bool = False):
     """
     Generates a skymodel for sources in delayCalFile for delay calibration.
     Uses modelImage as a base model if provided, otherwise will construct a
@@ -138,92 +138,94 @@ def main(MS, delayCalFile, modelImage='', astroSearchRadius=3.0, skip_vlass=Fals
         else:
             val = src_id
         src_names.append(val)
-    src_idx = [ i for i, val in enumerate(src_names) if MS_src == val ][0]
-
-    # get the coordinate values and the flux from the skymodel
-    # and convert the flux from mJy to Jy.
-    ra = t[ra_col].data[src_idx]
-    dec = t[de_col].data[src_idx]
-    smodel = t['Total_flux'].data[src_idx]*1.0e-3
-
-    ## gaia information if available - else use panstarrs if it is available
-    if "gaia_id" in t.keys() and t['gaia_id'].data[src_idx] != "--":
-        opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
-    elif "ps_id" in t.keys() and t['ps_id'].data[src_idx] != "--":
-        opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
+    if not process_all:
+        source_indices = [ i for i, val in enumerate(src_names) if MS_src == val ]
     else:
-        opt_coords = None
+        source_indices = [ i for i, val in enumerate(src_names) ]
 
-    ## spectral index information
-    if {"alpha_1", "alpha_2"}.issubset(t.keys()) and t['alpha_1'].data[src_idx] != "--":
-        a_1 = t['alpha_1'].data[src_idx]
-        a_2 = t['alpha_2'].data[src_idx]
-    else:
-        a_1, a_2 = None, None
+    for src_idx in source_indices:
+        # get the coordinate values and the flux from the skymodel
+        # and convert the flux from mJy to Jy.
+        ra = t[ra_col].data[src_idx]
+        dec = t[de_col].data[src_idx]
+        smodel = t['Total_flux'].data[src_idx]*1.0e-3
+
+        ## gaia information if available - else use panstarrs if it is available
+        if "gaia_id" in t.keys() and t['gaia_id'].data[src_idx] != "--":
+            opt_coords = SkyCoord( t['gaia_RA'].data[src_idx], t['gaia_DEC'].data[src_idx], unit='deg' )
+        elif "ps_id" in t.keys() and t['ps_id'].data[src_idx] != "--":
+            opt_coords = SkyCoord( t['ps_RA'].data[src_idx], t['ps_DEC'].data[src_idx], unit='deg' )
+        else:
+            opt_coords = None
+
+        ## spectral index information
+        if {"alpha_1", "alpha_2"}.issubset(t.keys()) and t['alpha_1'].data[src_idx] != "--":
+            a_1 = t['alpha_1'].data[src_idx]
+            a_2 = t['alpha_2'].data[src_idx]
+        else:
+            a_1, a_2 = None, None
 
 
-    if os.path.isfile(modelImage):
-        print('Using user-specified model {:s}'.format(modelImage))
-        sky_model = model_from_image(
-            modelImage,
-            smodel,
-            opt_coords,
-            astroSearchRadius=astroSearchRadius,
-            outdir=outdir
-        )
-    else:
-        used_vlass = False
-        if not skip_vlass:
-            ## search for a vlass image
-            lbcs_id = t[src_idx]['Observation']
-            vlass_file = glob.glob(
-                os.path.join(
-                    os.path.dirname(delayCalFile),
-                    '{:s}_vlass.fits'.format(lbcs_id)
-                )
+        if os.path.isfile(modelImage):
+            print('Using user-specified model {:s}'.format(modelImage))
+            sky_model = model_from_image(
+                modelImage,
+                smodel,
+                opt_coords,
+                astroSearchRadius=astroSearchRadius
             )
-            if len(vlass_file) > 0 and os.path.isfile(vlass_file[0]):
-                print(
-                    'Generating a model from image {:s}.'.format(vlass_file[0])
+        else:
+            used_vlass = False
+            if not skip_vlass:
+                ## search for a vlass image
+                lbcs_id = t[src_idx]['Observation']
+                vlass_file = glob.glob(
+                    os.path.join(
+                        os.path.dirname(delayCalFile),
+                        '{:s}_vlass.fits'.format(lbcs_id[0])
+                    )
                 )
-                sky_model = model_from_image(
-                    vlass_file[0],
-                    smodel,
-                    opt_coords,
-                    astroSearchRadius=astroSearchRadius,
-                    outdir=outdir
+                if len(vlass_file) > 0 and os.path.isfile(vlass_file[0]):
+                    print(
+                        'Generating a model from image {:s}.'.format(vlass_file[0])
+                    )
+                    sky_model = model_from_image(
+                        vlass_file[0],
+                        smodel,
+                        opt_coords,
+                        astroSearchRadius=astroSearchRadius
+                    )
+                    used_vlass = True
+                else:
+                    print('No VLASS image found.')
+            if not used_vlass:
+                print('Generating a point source model.')
+                sky_model = np.array(
+                    [[
+                        'ME0',
+                        'GAUSSIAN',
+                        'P0',
+                        opt_coords.ra.value if opt_coords is not None else ra,
+                        opt_coords.dec.value if opt_coords is not None else dec,
+                        smodel,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.1,
+                        0.0,
+                        0.0,
+                        '144e+06',
+                        '[-0.5]',
+                        'true'
+                    ]]
                 )
-                used_vlass = True
-            else:
-                print('No VLASS image found.')
-        if not used_vlass:
-            print('Generating a point source model.')
-            sky_model = np.array(
-                [[
-                    'ME0',
-                    'GAUSSIAN',
-                    'P0',
-                    opt_coords.ra.value if opt_coords is not None else ra,
-                    opt_coords.dec.value if opt_coords is not None else dec,
-                    smodel,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.1,
-                    0.0,
-                    0.0,
-                    '144e+06',
-                    '[-0.5]',
-                    'true'
-                ]]
-            )
 
-    ## edit spectral index information if necessary
-    if (a_1 is not None) and (a_2 is not None):
-        for i in range(len(sky_model)):
-            sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
+        ## edit spectral index information if necessary
+        if (a_1 is not None) and (a_2 is not None):
+            for i in range(len(sky_model)):
+                sky_model[i][13] = f'[{a_1:.3f},{a_2:.3f}]'
 
-    write_skymodel(sky_model,'skymodel.txt')
+        write_skymodel(sky_model, f'skymodel_{src_ids[src_idx]}.txt')
 
 
 if __name__ == "__main__":
@@ -231,12 +233,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Skynet script to handle LBCS calibrators.")
 
     parser.add_argument('MS', type=str, help='Measurement set for which to run skynet')
-    parser.add_argument('--delay-cal-file', required=True, type=str,help='Delay calibrator information')
-    parser.add_argument('--model-image', type=str, help='Image for generating starting model', default='')
-    parser.add_argument('--astrometric-search-radius', type=float, help='Search radius in arcsec to accept a match',default=3.0)
-    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='Skip vlass search and generate point source model')
+    parser.add_argument('--delay-cal-file', required=True, type=str,help='delay calibrator information')
+    parser.add_argument('--model-image', type=str, help='image for generating starting model', default='')
+    parser.add_argument('--astrometric-search-radius', type=float, help='search radius in arcsec to accept a match',default=3.0)
+    parser.add_argument('--skip-vlass', action='store_true',dest='skip_vlass', help='skip vlass search and generate point source model')
+    parser.add_argument('--process-all', action='store_true',dest='process_all', help='Process all sources in the delay calibrator file.')
     parser.add_argument('--outdir', type=str, help='Output directory', default='.')
 
     args = parser.parse_args()
 
-    main(args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass, outdir=args.outdir)
+    main(args.MS, delayCalFile=args.delay_cal_file, modelImage=args.model_image, skip_vlass=args.skip_vlass, outdir=args.outdir, process_all=args.process_all)

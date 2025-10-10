@@ -144,6 +144,24 @@ inputs:
         The name of the target solution table to use from the solset input for
         rotation measure corrections.
 
+    - id: select_best_n_delay_calibrators
+      type: int?
+      default: 1
+      doc: Select this number of top-scoring delay calibrator candidates to attempt to calibrate.
+
+    - id: starting_skymodel
+      type:
+        - File?
+        - File[]?
+      doc: |
+        Optional starting model(s) in BBS-compatible text format used to kickstart the delay calibration. If given and `do_auto_delay_selection` is enabled, the number of skymodels must be equal to `select_best_n_delay_calibrators`. Additionally, they should be named in such a way that when sorted by name, the delay calibrator MSes and skymodels end up in the same order.
+
+    - id: do_auto_delay_selection
+      type: boolean?
+      default: false
+      doc: |
+        Automatically select the best delay calibrator based on phasediff scores.
+
 steps:
     - id: setup
       label: setup
@@ -239,6 +257,8 @@ steps:
           source: model_image
         - id: number_cores
           source: number_cores
+        - id: do_auto_delay_selection
+          source: do_auto_delay_selection
       out:
         - id: msout
         - id: solutions
@@ -247,18 +267,58 @@ steps:
         - id: summary_file
       run: ./phaseup-concat.cwl
       label: phaseup
+      when: $(!inputs.do_auto_delay_selection)
 
     - id: validation
       in:
         - id: h5parm
-          source: [ phaseup/solutions ]
-          linkMerge: merge_nested
+          source: 
+            - select_best_delay_cal/solutions
+            - phaseup/solutions
+          linkMerge: merge_flattened
+          pickValue: first_non_null
+          valueFrom: $(self)
         - id: do_validation
           source: do_validation
+        - id: select_best_n_delay_calibrators
+          source: select_best_n_delay_calibrators
       out:
         - validate_csv
       run: ./subworkflows/dical_validation.cwl
-      when: $(inputs.do_validation)
+      when: $(inputs.do_validation && (inputs.select_best_n_delay_calibrators == 1))
+
+    - id: select_best_delay_cal
+      in:
+        - id: msin
+          source:
+            - process_ddf/msout
+            - sort-concatenate-flag/msout
+            - msin
+          linkMerge: merge_nested
+          pickValue: first_non_null
+          valueFrom: $(self)
+        - id: configfile
+          source: configfile
+        - id: delay_calibrator
+          source: delay_calibrator
+        - id: select_best_n_delay_calibrators
+          source: select_best_n_delay_calibrators
+        - id: do_auto_delay_selection
+          source: do_auto_delay_selection
+        - id: starting_skymodel
+          source: starting_skymodel
+          # This valueFrom suppresses CWL's warning about potentially incompatible types.
+          # There can technically be a single skymodel, but that means there is one source
+          # and thus nothing to automatically select the best from.
+          # Practically, we should never be in a situation of having File here.
+          valueFrom: $(self)
+      out:
+        - id: msout
+        - id: pictures
+        - id: phasediff_score_csv
+        - id: solutions
+      run: ./subworkflows/find-best-delay-calibrator.cwl
+      when: $(inputs.do_auto_delay_selection)
 
     - id: store_logs
       in:
@@ -301,19 +361,34 @@ steps:
             - msin
           pickValue: first_non_null
         - id: h5parm
-          source: phaseup/solutions
+          source:
+            - phaseup/solutions
+            - select_best_delay_cal/solutions
+          pickValue: first_non_null
+          linkMerge: merge_flattened
+          # This valueFrom suppresses CWL's warning about potentially incompatible types.
+          # select_best_delay_cal can technically return either File or File[], but the when
+          # clause for this step prevents from running if we have more than 1 candidate, so
+          # we should never be in a situation of having File[] here.
+          valueFrom: $(self)
         - id: apply_delay_solutions
           source: apply_delay_solutions
+        - id: select_best_n_delay_calibrators
+          source: select_best_n_delay_calibrators
       out:
         - id: ms_out
       run: ../steps/applycal.cwl
       scatter: ms
       label: apply_delay_allms
-      when: $(inputs.apply_delay_solutions)
+      when: $(inputs.apply_delay_solutions && (inputs.select_best_n_delay_calibrators == 1))
 
 outputs:
   - id: msout
-    outputSource: phaseup/msout
+    outputSource: 
+      - select_best_delay_cal/msout
+      - phaseup/msout
+    pickValue: all_non_null
+    linkMerge: merge_flattened
     type: Directory[]
     doc: |
         The fully concatenated data in MeasurementSet
@@ -338,13 +413,22 @@ outputs:
         sorted per subworkflow.
 
   - id: pictures
-    outputSource: phaseup/pictures
+    outputSource: 
+      - select_best_delay_cal/pictures
+      - phaseup/pictures
     type: File[]
+    pickValue: all_non_null
+    linkMerge: merge_flattened
     doc: Inspection plots generated by lofar_facet_selfcal.
 
   - id: solutions
-    outputSource: phaseup/solutions
-    type: File
+    outputSource:
+      - select_best_delay_cal/solutions
+      - phaseup/solutions
+    pickValue: all_non_null
+    type:
+      - File?
+      - File[]?
     doc: |
         The calibrated data solutions generated by lofar_facet_selfcal
         in HDF5 format.
@@ -353,6 +437,15 @@ outputs:
     outputSource: validation/validate_csv
     type: File?
     doc: CSV with validation scores
+
+  - id: phasediff_score_csv
+    outputSource:
+      - select_best_delay_cal/phasediff_score_csv
+    type:
+      - File?
+    pickValue: all_non_null
+    doc: |
+        A CSV file containing the phasediff scores for each of the calibrators that were split out.
 
   - id: summary_files
     outputSource:

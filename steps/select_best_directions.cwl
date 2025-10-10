@@ -29,6 +29,15 @@ inputs:
       inputBinding:
         prefix: "--best_score"
         position: 3
+    - id: select_best_n
+      type: int?
+      default: 0
+      doc: |
+        Select (at most) this number of best directions, sorted as best to worst.
+      inputBinding:
+        prefix: "--select_best_N"
+        position: 4
+
 
 outputs:
     - id: best_ms
