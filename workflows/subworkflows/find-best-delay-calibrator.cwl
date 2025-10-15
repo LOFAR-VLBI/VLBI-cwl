@@ -91,6 +91,7 @@ steps:
             - starting_skymodel
             - generate_skymodels/skymodel
           pickValue: all_non_null
+          linkMerge: merge_flattened
       out:
         - id: sorted_entries
       run: ../../steps/sort_by_name.cwl
