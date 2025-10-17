@@ -4,6 +4,7 @@ id: delay_cal_model
 label: Delay cal model
 doc: |
     Create one or more skymodels for use in the self-calibration.
+    Default behaviour is to use VLASS to generate the skymodel.
 
 baseCommand: skynet.py
 
@@ -16,19 +17,20 @@ inputs:
 
     - id: delay_calibrator
       type: File
-      doc: Coordinates of a suitable delay calibrator.
+      doc: Catalogue of delay calibrators.
       inputBinding:
         position: 1
         prefix: --delay-cal-file
         separate: true
-
     - id: model_image
       type: File?
-      doc: Image to generate an initial delay calibrator model from.
+      doc: Image to use in skynet
       inputBinding:
-        position: 1
+        position: 2
         prefix: --model-image
         separate: true
+        valueFrom: $(self.basename)
+
 
     - id: process_all
       type: boolean?
