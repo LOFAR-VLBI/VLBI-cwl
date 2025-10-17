@@ -15,6 +15,10 @@ inputs:
     type: File
     doc: Catalogue file with information on in-field calibrator.
 
+  - id: image_catalogue
+    type: File?
+    doc: Catalogue file with information on LoTSS sources in the field
+
   - id: numbands
     type: int?
     default: -1
@@ -25,9 +29,9 @@ inputs:
     default: null
     doc: If set, reference the grouping of files to this station subband.
 
-  - id: configfile
+  - id: phaseup_config
     type: File
-    doc: Settings for the delay calibration in delay_solve.
+    doc: phaseup_config.txt for phaseup scores - ideally from root
 
   - id: max_dp3_threads
     type: int?
@@ -153,39 +157,28 @@ steps:
       - id: output
     run: ../steps/concatenate_files.cwl
 
-  - id: delay_cal_model
-    label: delay_cal_model
+  - id: delay_cal_run
     in:
       - id: msin
         source: phaseup_concatenate/msout
         valueFrom: $(self[0])
       - id: delay_calibrator
         source: delay_calibrator
+      - id: image_catalogue
+        source: image_catalogue
       - id: model_image
         source: model_image
-    out:
-      - id: skymodel
-      - id: logfile
-    run: ../steps/delay_cal_model.cwl
-
-  - id: delay_solve
-    in:
-      - id: msin
-        source: phaseup_concatenate/msout
-        valueFrom: $(self[0])
-      - id: skymodel
-        source: delay_cal_model/skymodel
-        valueFrom: $(self[0])
-      - id: configfile
-        source: configfile
+      - id: phaseup_config
+        source: phaseup_config
       - id: number_cores
         source: number_cores
     out:
-      - id: h5parm
-      - id: images
+      - id: solutions
+      - id: config
+      - id: pictures
       - id: logfile
-    run: ../steps/facet_selfcal.cwl
-    label: delay_solve
+    run: ./subworkflows/delay_cal_run.cwl
+    label: delay_cal_run
 
   - id: summary
     in:
@@ -196,7 +189,7 @@ steps:
       - id: run_type
         default: phaseup-concat
       - id: solutions
-        source: delay_solve/h5parm
+        source: delay_cal_run/solutions
       - id: min_unflagged_fraction
         default: 0.5
       - id: refant
@@ -215,8 +208,7 @@ steps:
           - prep_delay/logfile
           - sort_concatenate/logfile
           - concat_logfiles_phaseup/output
-          - delay_cal_model/logfile
-          - delay_solve/logfile
+          - delay_cal_run/logfile
           - summary/logfile
       - id: sub_directory_name
         default: phaseup
@@ -235,7 +227,7 @@ outputs:
 
   - id: solutions
     type: File
-    outputSource: delay_solve/h5parm
+    outputSource: delay_cal_run/solutions
     doc: |
         The calibrated solutions for the
         delay calibrator in HDF5 format.
@@ -249,7 +241,7 @@ outputs:
 
   - id: pictures
     type: File[]
-    outputSource: delay_solve/images
+    outputSource: delay_cal_run/pictures
     doc: |
         The inspection plots generated
         by delay_solve.

@@ -11,8 +11,15 @@ inputs:
       type: Directory
       doc: Input MeasurementSet
       inputBinding:
-        position: 20
-        valueFrom: $(self.basename)
+        position: 1
+    - id: phaseup_config
+      type: File
+      doc: |
+        Configuration file for facet_selfcal.
+        Intended to be phaseup_config.txt.
+      inputBinding:
+        position: 0
+        prefix: --configpath
 
 outputs:
     - id: phasediff_h5out
@@ -22,9 +29,9 @@ outputs:
         glob: "scalarphasediff*.h5"
     - id: scalarphase_h5out
       type: File
-      doc: h5parm with simple scalarphase solutions.
+      doc: h5parm solution with simple scalarphase solutions
       outputBinding:
-        glob: "scalarphase*.h5"
+        glob: "scalarphase1*.h5"
     - id: phasediff_score
       type: File
       doc: csv with phasediff scores
@@ -34,7 +41,7 @@ outputs:
       type: File[]
       doc: log files from facetselfcal
       outputBinding:
-        glob: phasediff*.log
+        glob: phasediff_delay*.log
 
 requirements:
   - class: InlineJavascriptRequirement
@@ -43,30 +50,11 @@ requirements:
       - entry: $(inputs.phasediff_ms)
         writable: true
 
-arguments:
-  - -i
-  - phasediff
-  - --forwidefield
-  - --phaseupstations=core
-  - --skipbackup
-  - --uvmin=20000
-  - --soltype-list=['scalarphasediff']
-  - --solint-list=['10min']
-  - --nchan-list=[6]
-  - --docircular
-  - --uvminscalarphasediff=0
-  - --stop=1
-  - --soltypecycles-list=[0]
-  - --imsize=1600
-  - --skymodelpointsource=1.0
-  - --stopafterskysolve
-  - --phasediff_only
-
 hints:
   - class: DockerRequirement
     dockerPull: vlbi-cwl
   - class: ResourceRequirement
     coresMin: 2
 
-stdout: phasediff.log
-stderr: phasediff_err.log
+stdout: phasediff_delay.log
+stderr: phasediff_delay_err.log
